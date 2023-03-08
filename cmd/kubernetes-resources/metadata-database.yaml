@@ -1,0 +1,86 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: epos-metadatadb
+spec:
+  replicas: 1
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      app: epos-metadatadb
+      version: ${DEPLOY_TAG}
+  template:
+    metadata:
+      labels:
+        app: epos-metadatadb
+        version: ${DEPLOY_TAG}
+      annotations:
+        docker-metadata: DOCKER-METADATA
+    spec:
+      imagePullSecrets:
+      - name: epos-ics-c-tests-docker-registry-secret # this line is important!
+      containers:
+      - name: metadatacatalogue
+        image: ${DOCKER_REGISTRY}/${METADATA_DB_IMAGE}
+        imagePullPolicy: Always
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: postgresql_username
+        - name: POSTGRES_PASS
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: postgresql_password
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: postgresql_password
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: postgresql_dbname
+        resources:
+          requests:
+            cpu: 20m
+            memory: 1Gi
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+          - name: metadata-db-pvc
+            mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: metadata-db-pvc
+          persistentVolumeClaim:
+            claimName: metadata-db-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: metadata-db-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Gi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: metadatacatalogue # this name is required for the dbconnector to connect to this db
+  labels:
+    app: epos-metadatadb
+    version: ${DEPLOY_TAG}
+spec:
+  selector:
+    app: epos-metadatadb
+    version: ${DEPLOY_TAG}
+  ports:
+  - protocol: TCP
+    port: 5432

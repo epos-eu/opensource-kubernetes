@@ -1,0 +1,118 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: resources-deployment 
+spec:
+  replicas: 1 # maybe more, no problem should happen with software heart 
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      app: epos-resources
+      version: ${DEPLOY_TAG}
+  template:
+    metadata:
+      labels:
+        app: epos-resources
+        version: ${DEPLOY_TAG}
+      annotations:
+        docker-metadata: DOCKER-METADATA
+    spec:
+      imagePullSecrets:
+      - name: epos-ics-c-tests-docker-registry-secret # this line is important!
+      containers:
+      - name: resources-service
+        image: ${DOCKER_REGISTRY}/${RESOURCES_SERVICE_IMAGE}
+        env:
+        - name: BROKER_HOST
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_host
+        - name: BROKER_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_username
+        - name: BROKER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_password
+        - name: BROKER_VHOST
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_vhost
+        - name: BASECONTEXT
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: base_context
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 10m
+            memory: 100Mi # have to be more than 50MB
+        ports:
+        - containerPort: 8080
+          name: resources-port
+        volumeMounts:
+          - name: resources-pvc
+            mountPath: /resources
+          - name: logging-config-volume
+            mountPath: /etc/log4j2/
+      volumes:
+        - name: resources-pvc
+          persistentVolumeClaim:
+            claimName: resources-pvc
+        - name: logging-config-volume
+          configMap:
+            name: logging-config
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: resources-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: resources-service
+  labels:
+    app: epos-resources
+    version: ${DEPLOY_TAG}
+spec:
+  selector:
+    app: epos-resources
+    version: ${DEPLOY_TAG}
+  ports:
+  - protocol: TCP
+    port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: resources-ingress
+  labels:
+    app: epos-resources
+    version: ${DEPLOY_TAG}
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: ${DEPLOY_PATH}api/resources-service/v1/
+        pathType: Prefix
+        backend:
+          service:
+            name: resources-service
+            port:
+              number: 8080

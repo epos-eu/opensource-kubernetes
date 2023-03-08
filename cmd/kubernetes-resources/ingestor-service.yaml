@@ -1,0 +1,125 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: ingestor-deployment
+spec:
+  replicas: 1 # maybe more, no problem should happen with software heart
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      app: epos-ingestor
+      version: ${DEPLOY_TAG}
+  template:
+    metadata:
+      labels:
+        app: epos-ingestor
+        version: ${DEPLOY_TAG}
+      annotations:
+        docker-metadata: "DOCKER-METADATA"
+    spec:
+      imagePullSecrets:
+      - name: epos-ics-c-tests-docker-registry-secret # this line is important!
+      containers:
+      - name: ingestor-service
+        image: ${DOCKER_REGISTRY}/${INGESTOR_IMAGE}
+        imagePullPolicy: Always
+        env:
+        - name: BROKER_HOST
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_host
+        - name: BROKER_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_username
+        - name: BROKER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_password
+        - name: BROKER_VHOST
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_vhost
+        - name: POSTGRESQL_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: postgresql_connection_string
+        - name: INGESTOR_HASH
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: ingestor_hash
+        - name: BASECONTEXT
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: base_context
+        resources:
+          requests:
+            cpu: 10m
+            memory: 100Mi # have to be more than 50MB
+        volumeMounts:
+          - name: ingestor-pvc
+            mountPath: /ingestor
+          - name: logging-config-volume
+            mountPath: /etc/log4j2/
+      volumes:
+        - name: ingestor-pvc
+          persistentVolumeClaim:
+            claimName: ingestor-pvc
+        - name: logging-config-volume
+          configMap:
+            name: logging-config
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ingestor-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: ingestor-service
+  labels:
+    app: epos-ingestor
+    version: ${DEPLOY_TAG}
+spec:
+  selector:
+    app: epos-ingestor
+    version: ${DEPLOY_TAG}
+  ports:
+  - protocol: TCP
+    port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingestor-ingress
+  labels:
+    app: epos-ingestor
+    version: DEPLOY-TAG
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: ${DEPLOY_PATH}api/ingestor-service/v1/
+        pathType: Prefix
+        backend:
+          service:
+            name: ingestor-service
+            port:
+              number: 8080

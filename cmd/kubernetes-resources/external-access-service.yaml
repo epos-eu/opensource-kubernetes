@@ -1,0 +1,126 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: external-access-deployment
+spec:
+  replicas: 1 # maybe more, no problem should happen with software heart
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      app: epos-external-access
+      version: ${DEPLOY_TAG}
+  template:
+    metadata:
+      labels:
+        app: epos-external-access
+        version: ${DEPLOY_TAG}
+      annotations:
+        docker-metadata: DOCKER-METADATA
+    spec:
+      imagePullSecrets:
+      - name: epos-ics-c-tests-docker-registry-secret # this line is important!
+      containers:
+      - name: external-access-service
+        image: ${DOCKER_REGISTRY}/${EXTERNAL_ACCESS_IMAGE}
+        env:
+        - name: BROKER_HOST
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_host
+        - name: BROKER_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_username
+        - name: BROKER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_password
+        - name: BROKER_VHOST
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_vhost
+        - name: BROKER_HOST
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_host
+        - name: BASECONTEXT
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: base_context
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 10m
+            memory: 100Mi # have to be more than 50MB
+          limits:
+            cpu: 2000m
+            memory: 3072Mi
+        ports:
+        - containerPort: 8080
+          name: external-port
+        volumeMounts:
+          - name: external-access-pvc
+            mountPath: /external-access
+          - name: logging-config-volume
+            mountPath: /etc/log4j2/
+      volumes:
+        - name: external-access-pvc
+          persistentVolumeClaim:
+            claimName: external-access-pvc
+        - name: logging-config-volume
+          configMap:
+            name: logging-config
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: external-access-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: external-access-service
+  labels:
+    app: epos-external-access
+    version: ${DEPLOY_TAG}
+spec:
+  selector:
+    app: epos-external-access
+    version: ${DEPLOY_TAG}
+  ports:
+  - protocol: TCP
+    port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: external-access-ingress
+  labels:
+    app: epos-external-access
+    version: ${DEPLOY_TAG}
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /deploy/pathapi/external-access-service/v1/
+        pathType: Prefix
+        backend:
+          service:
+            name: external-access-service
+            port:
+              number: 8080

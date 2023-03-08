@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logging-config
+data:
+  log4j2.properties: |
+    name=ExternalConfig
+    monitorInterval=60
+
+    property.pattern=%date %p [%thread] %C{10}.%M(): %m%n%throwable
+
+    appender.console.type=Console
+    appender.console.name=Console
+    appender.console.layout.type=PatternLayout
+    appender.console.layout.pattern=${pattern}
+
+    # debug, info, warn, error
+    rootLogger.level=info
+    rootLogger.appenderRef.console.ref=Console
+
+    #https://logging.apache.org/log4j/2.x/manual/layouts.html
+    #https://www.baeldung.com/mdc-in-log4j-2-logback

@@ -1,0 +1,98 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: gateway-deployment 
+spec:
+  replicas: 1 # maybe more, no problem should happen with software heart 
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      app: epos-gateway
+      version: ${DEPLOY_TAG}
+  template:
+    metadata:
+      labels:
+        app: epos-gateway
+        version: ${DEPLOY_TAG}
+      annotations:
+        docker-metadata: DOCKER-METADATA
+    spec:
+      imagePullSecrets:
+      - name: epos-ics-c-tests-docker-registry-secret # this line is important!
+      containers:
+      - name: gateway
+        image: ${DOCKER_REGISTRY}/${GATEWAY_IMAGE}
+        env:
+        - name: BASECONTEXT
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: base_context
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 10m
+            memory: 100Mi # have to be more than 50MB
+        ports:
+        - containerPort: 5000
+          name: gateway-port
+        volumeMounts:
+          - name: gateway-pvc
+            mountPath: /gateway
+          - name: logging-config-volume
+            mountPath: /etc/log4j2/
+      volumes:
+        - name: gateway-pvc
+          persistentVolumeClaim:
+            claimName: gateway-pvc
+        - name: logging-config-volume
+          configMap:
+            name: logging-config
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gateway-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: gateway-service
+  labels:
+    app: epos-gateway
+    version: ${DEPLOY_TAG}
+spec:
+  selector:
+    app: epos-gateway
+    version: ${DEPLOY_TAG}
+  ports:
+  - protocol: TCP
+    port: 5000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gateway-ingress
+  labels:
+    app: epos-gateway
+    version: ${DEPLOY_TAG}
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: ${DEPLOY_PATH}api/webapi/v1.3/
+        pathType: Prefix
+        backend:
+          service:
+            name: gateway-service
+            port:
+              number: 5000

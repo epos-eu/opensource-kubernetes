@@ -1,0 +1,138 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: data-metadata-deployment
+spec:
+  replicas: 1 # maybe more, no problem should happen with software heart
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      app: epos-data-metadata
+      version: ${DEPLOY_TAG}
+  template:
+    metadata:
+      labels:
+        app: epos-data-metadata
+        version: ${DEPLOY_TAG}
+      annotations:
+        docker-metadata: DOCKER-METADATA
+    spec:
+      imagePullSecrets:
+      - name: epos-ics-c-tests-docker-registry-secret # this line is important!
+      containers:
+      - name: data-metadata-service
+        image: ${DOCKER_REGISTRY}/${DATA_METADATA_SERVICE_IMAGE}
+        imagePullPolicy: Always
+        env:
+        - name: BROKER_HOST
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_host
+        - name: BROKER_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_username
+        - name: BROKER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_password
+        - name: BROKER_VHOST
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_vhost
+        - name: POSTGRESQL_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: postgresql_connection_string
+        - name: APIHOST
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: api_host
+        - name: APICONTEXT
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: api_context
+        - name: PERSISTENCE_NAME
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: persistence_name
+        - name: MONITORING
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: monitoring
+        - name: MONITORING_URL
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: monitoring_url
+        - name: MONITORING_USER
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: monitoring_user
+        - name: MONITORING_PWD
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: monitoring_pwd
+        - name: NUM_OF_PUBLISHERS
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: datametadataservice_publishers
+        - name: NUM_OF_CONSUMERS
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: datametadataservice_consumers
+        - name: CONNECTION_POOL_INIT_SIZE
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: datametadataservice_connectionpoolinitsize
+        - name: CONNECTION_POOL_MIN_SIZE
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: datametadataservice_connectionpoolminsize
+        - name: CONNECTION_POOL_MAX_SIZE
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: datametadataservice_connectionpoolmaxsize
+        resources:
+          requests:
+            cpu: 30m
+            memory: 1Gi # have to be more than 50MB
+        volumeMounts:
+          - name: data-metadata-pvc
+            mountPath: /data-metadata
+          - name: logging-config-volume
+            mountPath: /etc/log4j2/
+      volumes:
+        - name: data-metadata-pvc
+          persistentVolumeClaim:
+            claimName: data-metadata-pvc
+        - name: logging-config-volume
+          configMap:
+            name: logging-config
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-metadata-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

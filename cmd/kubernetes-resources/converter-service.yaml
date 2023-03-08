@@ -1,0 +1,73 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: converter-deployment 
+spec:
+  replicas: 1 # maybe more, no problem should happen with software heart 
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      app: epos-converter
+      version: ${DEPLOY_TAG}
+  template:
+    metadata:
+      labels:
+        app: epos-converter
+        version: ${DEPLOY_TAG}
+      annotations:
+        docker-metadata: DOCKER-METADATA
+    spec:
+      imagePullSecrets:
+      - name: epos-ics-c-tests-docker-registry-secret # this line is important!
+      containers:
+      - name: converter-service
+        image: ${DOCKER_REGISTRY}/${CONVERTER_IMAGE}
+        env:
+        - name: BROKER_HOST
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_host
+        - name: BROKER_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_username
+        - name: BROKER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_password
+        - name: BROKER_VHOST
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: broker_vhost
+        - name: REPOTOKEN_DEFAULT
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: repotoken_default
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 10m
+            memory: 100Mi # have to be more than 50MB
+        volumeMounts:
+          - name: converter-pvc
+            mountPath: /converter
+      volumes:
+        - name: converter-pvc
+          persistentVolumeClaim:
+            claimName: converter-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: converter-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
