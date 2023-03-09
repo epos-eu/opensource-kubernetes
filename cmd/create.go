@@ -185,14 +185,14 @@ var deployCmd = & cobra.Command {
         "ns",
         namespace))
 
-        time.Sleep(1 * time.Second)
+        time.Sleep(10 * time.Second)
 
         execute_command(cmd,exec.Command("kubectl",
             "apply",
             "-f",
             list_of_services[0]))
 
-        time.Sleep(1 * time.Second)
+        time.Sleep(10 * time.Second)
 
         for i:= 1; i < 14; i++{
 
@@ -212,6 +212,8 @@ var deployCmd = & cobra.Command {
             "--all",
             "-n",
             namespace))
+
+            time.Sleep(10 * time.Second)
         }
 
         print_urls()
@@ -235,7 +237,7 @@ func find_and_replace(file string) {
 }
 
 func execute_command(cmd * cobra.Command, command * exec.Cmd) {
-    cmd.Printf(command.String())
+    cmd.Println(command.String())
     command.Stdout = os.Stdout
     command.Stderr = os.Stderr
     if err := command.Run();
