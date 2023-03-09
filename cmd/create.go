@@ -27,9 +27,6 @@ import (
     "time"
     "regexp"
     "strings"
-    "bytes"
-    "fmt"
-    "io/ioutil"
 	"github.com/a8m/envsubst"
 )
 
@@ -219,21 +216,6 @@ var deployCmd = & cobra.Command {
         print_urls()
 
     },
-}
-
-func find_and_replace(file string) {
-    input, err := ioutil.ReadFile(file)
-    if err != nil {
-            fmt.Println(err)
-            os.Exit(1)
-    }
-
-    output := bytes.Replace(input, []byte("replaceme"), []byte("ok"), -1)
-
-    if err = ioutil.WriteFile(file, output, 0666); err != nil {
-        fmt.Println(err)
-        os.Exit(1)
-    }
 }
 
 func execute_command(cmd * cobra.Command, command * exec.Cmd) {
