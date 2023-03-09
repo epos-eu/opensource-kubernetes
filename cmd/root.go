@@ -79,7 +79,7 @@ var rootCmd = & cobra.Command {
     Use: "epos-<os>-<architecture>",
     Short: "EPOS Open Source CLI installer",
     Version: "1.0.0",
-    Long: `EPOS Open Source CLI installer to deploy the EPOS System using docker-compose`,
+    Long: `EPOS Open Source CLI installer to deploy the EPOS System using Kubernetes`,
 }
 
 func Execute() {

@@ -27,8 +27,8 @@ import (
 
 var deleteCmd = & cobra.Command {
     Use: "delete",
-    Short: "Delete an environment on kubernetes",
-    Long: `Delete an enviroment on kubernetes using namespace`,
+    Short: "Delete an environment on Kubernetes",
+    Long: `Delete an enviroment on Kubernetes using Namespace`,
     Run: func(cmd * cobra.Command, args[] string) {
 
         context, _ := cmd.Flags().GetString("context")

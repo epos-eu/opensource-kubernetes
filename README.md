@@ -1,10 +1,10 @@
 
-# EPOS Open Source - Docker installer
+# EPOS Open Source - Kubernetes installer
 
 ## Introduction
 
-EPOS Open Source - Docker installer is part of the EPOS Open Source project for local installation using Docker.
-It contains a set of docker images to deploy the EPOS ecosystem. 
+EPOS Open Source - Kubernetes installer is part of the EPOS Open Source project for local installation using Kubernetes.
+It contains a set of Kubernetes images to deploy the EPOS ecosystem. 
 
 Use `epos-<os>-<architecture>` binary to spin up local environment on Linux, Mac OS X or Windows.
 
@@ -69,9 +69,9 @@ For further information follow the official guidelines: https://kubernetes.io/do
 
 | Name | Standard Value | Description |
 |--|--|--|
-| DOCKER_REGISTRY | epos | Docker registry url |
-| REGISTRY_USERNAME | changeme | Docker registry username |
-| REGISTRY_PASSWORD | changeme | Docker registry password |
+| Kubernetes_REGISTRY | epos | Kubernetes registry url |
+| REGISTRY_USERNAME | changeme | Kubernetes registry username |
+| REGISTRY_PASSWORD | changeme | Kubernetes registry password |
 
 ### GitLab/Hub configuration
 
@@ -85,7 +85,7 @@ For further information follow the official guidelines: https://kubernetes.io/do
 |--|--|--|
 | SWIRRL_BASE_PATH | https://epos-ics-d.brgm-rec.fr/swirrl-api/ | Temporary url to swirrl APIs |
 
-### Docker Images for Open Source 
+### Kubernetes Images for Open Source 
 
 | Variable name | Image name | Default Tag |
 |--|--|--|
@@ -126,21 +126,22 @@ chmod +x epos-<os>-<architecture>
 The `<command>` field value is one of the following listed below:
 
 ```
-EPOS Open Source CLI installer to deploy the EPOS System using docker-compose
+EPOS Open Source CLI installer to deploy the EPOS System using Kubernetes
 
 Usage:
   epos-<os>-<architecture> [command]
 
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
-  delete      Delete an environment on docker
-  deploy      Deploy an environment on docker
-  export      Export configuration files in output folder, options: [env, compose]
+  delete      Delete an environment on kubernetes
+  deploy      Deploy an environment on Kubernetes
+  export      Export configuration files in output folder, options: [env]
   help        Help about any command
   populate    Populate the existing environment with metadata information
 
 Flags:
-  -h, --help   help for [command]
+  -h, --help      help for epos-<os>-<architecture>
+  -v, --version   version for epos-<os>-<architecture>
 
 Use "epos-<os>-<architecture> [command] --help" for more information about a command.
 ```
@@ -148,29 +149,30 @@ Use "epos-<os>-<architecture> [command] --help" for more information about a com
 ## Deploy a new environment
 
 ```
-Deploy an enviroment with .env set up on docker
+Deploy an enviroment with .env set up on Kubernetes
 
 Usage:
   epos-<os>-<architecture> deploy [flags]
 
 Flags:
-      --dockercompose string   Docker compose file, use default if not provided
-      --env string             Environment variable file, use default if not provided
-  -h, --help                   help for deploy
+      --context string     Kubernetes context
+  -h, --help               help for deploy
+      --namespace string   Kubernetes namespace
+      --tag string         Version Tag
 ```
 
 ## Delete the existing environment
 
 ```
-Delete an enviroment with .env set up on docker
+Delete an enviroment on Kubernetes using Namespace
 
 Usage:
   epos-<os>-<architecture> delete [flags]
 
 Flags:
-      --dockercompose string   Docker compose file, use default if not provided
-      --env string             Environment variable file, use default if not provided
-  -h, --help                   help for delete
+      --context string     Kubernetes context
+  -h, --help               help for delete
+      --namespace string   Kubernetes namespace
 ```
 
 ## Populate the existing environment with metadata
@@ -186,25 +188,26 @@ Usage:
   epos-<os>-<architecture> populate [flags]
 
 Flags:
-      --env string      Environment variable file
-      --folder string   Folder where ttl files are located
-  -h, --help            help for populate
+      --env string         Environment variable file
+      --folder string      Folder where ttl files are located
+  -h, --help               help for populate
+      --namespace string   Kubernetes namespace
 ```
 
 ### Manual option
 
 Use the API Gateway endpoint to manually ingest metadata TTL files into the catalogue.
 
-## Export configuration file and docker-compose
+## Export configuration file and Kubernetes-compose
 
 ```
-Export configuration files for customization in output folder, options: [env, compose]
+Export configuration files for customization in output folder, options: [env]
 
 Usage:
   epos-<os>-<architecture> export [flags]
 
 Flags:
-      --file string     File to export, available options: [env, compose]
+      --file string     File to export, available options: [env]
   -h, --help            help for export
       --output string   Output folder
 ```
@@ -214,17 +217,17 @@ Flags:
 
 EPOS Data Portal: 
 ```
-http://<your-ip>:<GUI_PORT><DEPLOY_PATH>
+http://<your-ip>/<DEPLOY_PATH>
 ```
 
 EPOS Backoffice: 
 ```
-http://<your-ip>:<BACKOFFICE_GUI_PORT><DEPLOY_PATH>
+http://<your-ip>/<DEPLOY_PATH>
 ```
 
 EPOS API Gateway: 
 ```
-http://<your-ip>:<API_PORT><DEPLOY_PATH><API_PATH>
+http://<your-ip>/<DEPLOY_PATH>/<API_PATH>
 ```
 
 ## Contributing

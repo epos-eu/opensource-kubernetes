@@ -1,6 +1,6 @@
 /*
-    EPOS Open Source - Local installation with Docker
-    Copyright (C) 2022  EPOS ERIC
+    EPOS Open Source - Local installation with Kubernetes
+    Copyright (C) 2023  EPOS ERIC
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,8 +39,8 @@ var (
 
 var deployCmd = & cobra.Command {
     Use: "deploy",
-    Short: "Deploy an environment on docker",
-    Long: `Deploy an enviroment with .env set up on docker`,
+    Short: "Deploy an environment on Kubernetes",
+    Long: `Deploy an enviroment with .env set up on Kubernetes`,
     Run: func(cmd * cobra.Command, args[] string) {
 
         env, _ := cmd.Flags().GetString("env")

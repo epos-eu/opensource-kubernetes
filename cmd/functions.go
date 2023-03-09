@@ -43,7 +43,7 @@ func setupIPs() {
 
 func print_urls() {
 
-    fmt.Print(`Open Source Docker deploy
+    fmt.Print(`Open Source Kubernetes deploy
 
      &&&&&&&&&&&&&&&&&& *&&&&&&&%&&&%               *****************               &&&&&&/         
      &&&&&&&&&&&&&&&&&& *&&&&&&&&&&&&&&&&&       **  **********  *******       &&&&&&&&&&&&&&&&&    
