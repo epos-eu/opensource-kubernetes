@@ -10,8 +10,8 @@ Use `epos-<os>-<architecture>` binary to spin up local environment on Linux, Mac
 
 ## Prerequisites
 
-Docker Engine and Docker Compose installed on your host machine.
-For further information follow the official guidelines: https://docs.docker.com/get-docker/
+Kubernetes Tools installed on your local machine and access to a Kubernetes Cluster.
+For further information follow the official guidelines: https://kubernetes.io/docs/home/
 
 ## Environment Variables
 ### Base environment configuration

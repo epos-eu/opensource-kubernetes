@@ -1,6 +1,6 @@
 : '
-    EPOS Open Source - Local installation with Docker
-    Copyright (C) 2022  EPOS ERIC
+    EPOS Open Source - Local installation with Kubernetes
+    Copyright (C) 2023  EPOS ERIC
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

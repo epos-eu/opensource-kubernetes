@@ -66,7 +66,12 @@ var deployCmd = & cobra.Command {
             }
         }
 
+        os.Setenv("CONTEXT", context)
         os.Setenv("DEPLOY_TAG", tag)
+        os.Setenv("NAMESPACE", namespace)
+        os.Setenv("DEPLOY_PATH", "/"+namespace+"/")
+        os.Setenv("BASE_CONTEXT", "/"+namespace)
+
         setupIPs()
 
         operator, err = envsubst.Bytes([]byte(operator))
@@ -195,7 +200,9 @@ var deployCmd = & cobra.Command {
             "kubectl",
             "apply",
             "-f",
-            list_of_services[i]))
+            list_of_services[i],
+            "-n",
+            namespace))
             
 
             execute_command(cmd,exec.Command("kubectl",
