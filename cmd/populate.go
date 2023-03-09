@@ -42,6 +42,7 @@ var populateCmd = & cobra.Command {
 
         path, _ := cmd.Flags().GetString("folder")
         env, _ := cmd.Flags().GetString("env")
+        namespace, _ := cmd.Flags().GetString("namespace")
 
         fileInfo, err := os.Stat(path)
         if err != nil {
@@ -57,6 +58,8 @@ var populateCmd = & cobra.Command {
             log.Fatal("Error loading env variables from "+env+"\n")
             log.Fatal(err)
         }
+
+        os.Setenv("DEPLOY_PATH", "/"+namespace+"/")
 
         free_port, err := GetFreePort()
         if free_port != 0 {
@@ -99,7 +102,9 @@ var populateCmd = & cobra.Command {
                 if strings.HasSuffix(info.Name(), ".ttl") {
                     fmt.Println("Ingesting File: ", info.Name())
 
-                    posturl := "http://"+os.Getenv("LOCAL_IP")+":"+os.Getenv("API_PORT")+os.Getenv("DEPLOY_PATH")+os.Getenv("API_PATH")+"/ingestor"
+                    posturl := "http://"+os.Getenv("LOCAL_IP")+os.Getenv("DEPLOY_PATH")+os.Getenv("API_PATH")+"/ingestor"
+
+                    fmt.Println("http://"+os.Getenv("LOCAL_IP")+os.Getenv("DEPLOY_PATH")+os.Getenv("API_PATH")+"/ingestor")
                     
                     r, err := http.NewRequest("POST", posturl, nil)
                     if err != nil {
@@ -161,4 +166,6 @@ func init() {
     populateCmd.Flags().String("folder", "", "Folder where ttl files are located")
     populateCmd.MarkFlagRequired("folder")
     populateCmd.Flags().String("env", "", "Environment variable file")
+    populateCmd.Flags().String("namespace", "", "Kubernetes namespace")
+    populateCmd.MarkFlagRequired("namespace")
 }
