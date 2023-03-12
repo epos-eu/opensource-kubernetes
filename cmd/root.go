@@ -76,7 +76,7 @@ var (
     )
 
 var rootCmd = & cobra.Command {
-    Use: "epos-<os>-<architecture>",
+    Use: "epos-kubernetes-cli",
     Short: "EPOS Open Source CLI installer",
     Version: "1.0.0",
     Long: `EPOS Open Source CLI installer to deploy the EPOS System using Kubernetes`,

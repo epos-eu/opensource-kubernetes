@@ -19,11 +19,11 @@ For further information follow the official guidelines: https://kubernetes.io/do
 
 Download the binary file according to your OS at the following link: https://epos-ci.brgm.fr/epos/opensource-kubernetes/-/packages 
 
-Give permissions on `epos-installer` file and move on binary folder from a Terminal (in Linux/MacOS):
+Give permissions on `epos-kubernetes-cli` file and move on binary folder from a Terminal (in Linux/MacOS):
 
 ```
-chmod +x epos-installer
-sudo mv epos-installer /usr/local/bin/epos-installer
+chmod +x epos-kubernetes-cli
+sudo mv epos-kubernetes-cli /usr/local/bin/epos-kubernetes-cli
 ```
 
 ## Usage
