@@ -6,7 +6,7 @@
 EPOS Open Source - Kubernetes installer is part of the EPOS Open Source project for local installation using Kubernetes.
 It contains a set of Kubernetes images to deploy the EPOS ecosystem. 
 
-Use `epos-<os>-<architecture>` binary to spin up local environment on Linux, Mac OS X or Windows.
+Use `epos-kubernetes-cli` binary to spin up local environment on Linux, Mac OS X or Windows.
 
 ## Prerequisites
 
@@ -29,7 +29,7 @@ sudo mv epos-kubernetes-cli /usr/local/bin/epos-kubernetes-cli
 ## Usage
 
 ```
-./epos-<os>-<architecture> <command>
+./epos-kubernetes-cli <command>
 ```
 
 The `<command>` field value is one of the following listed below:
@@ -38,7 +38,7 @@ The `<command>` field value is one of the following listed below:
 EPOS Open Source CLI installer to deploy the EPOS System using Kubernetes
 
 Usage:
-  epos-<os>-<architecture> [command]
+  epos-kubernetes-cli [command]
 
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
@@ -49,10 +49,10 @@ Available Commands:
   populate    Populate the existing environment with metadata information
 
 Flags:
-  -h, --help      help for epos-<os>-<architecture>
-  -v, --version   version for epos-<os>-<architecture>
+  -h, --help      help for epos-kubernetes-cli
+  -v, --version   version for epos-kubernetes-cli
 
-Use "epos-<os>-<architecture> [command] --help" for more information about a command.
+Use "epos-kubernetes-cli [command] --help" for more information about a command.
 ```
 
 ## Deploy a new environment
@@ -61,7 +61,7 @@ Use "epos-<os>-<architecture> [command] --help" for more information about a com
 Deploy an enviroment with .env set up on Kubernetes
 
 Usage:
-  epos-<os>-<architecture> deploy [flags]
+  epos-kubernetes-cli deploy [flags]
 
 Flags:
       --context string     Kubernetes context
@@ -76,7 +76,7 @@ Flags:
 Delete an enviroment on Kubernetes using Namespace
 
 Usage:
-  epos-<os>-<architecture> delete [flags]
+  epos-kubernetes-cli delete [flags]
 
 Flags:
       --context string     Kubernetes context
@@ -94,7 +94,7 @@ Download or create TTL files according to EPOS-DCAT-AP and use the following com
 Populate the existing environment with metadata information in a specific folder
 
 Usage:
-  epos-<os>-<architecture> populate [flags]
+  epos-kubernetes-cli populate [flags]
 
 Flags:
       --env string         Environment variable file
@@ -113,7 +113,7 @@ Use the API Gateway endpoint to manually ingest metadata TTL files into the cata
 Export configuration files for customization in output folder, options: [env]
 
 Usage:
-  epos-<os>-<architecture> export [flags]
+  epos-kubernetes-cli export [flags]
 
 Flags:
       --file string     File to export, available options: [env]
