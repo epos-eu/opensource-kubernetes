@@ -15,12 +15,15 @@ For further information follow the official guidelines: https://kubernetes.io/do
 
 ## Installation
 
-Download the binary file according to your OS.
+## Installation
 
-Then give permissions on `epos-<os>-<architecture>` file from a Terminal (in Linux/MacOS):
+Download the binary file according to your OS at the following link: https://epos-ci.brgm.fr/epos/opensource-kubernetes/-/packages 
+
+Give permissions on `epos-installer` file and move on binary folder from a Terminal (in Linux/MacOS):
 
 ```
-chmod +x epos-<os>-<architecture>
+chmod +x epos-installer
+sudo mv epos-installer /usr/local/bin/epos-installer
 ```
 
 ## Usage
