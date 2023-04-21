@@ -203,11 +203,6 @@ http://<your-ip>/<DEPLOY_PATH>/<API_PATH>
 |--|--|--|
 | REPOTOKEN_DEFAULT | changeme | Token to access gitlab repositories, used from converter to download plugins |
 
-### ICS-D configuration
-
-| Name | Standard Value | Description |
-|--|--|--|
-| SWIRRL_BASE_PATH | https://epos-ics-d.brgm-rec.fr/swirrl-api/ | Temporary url to swirrl APIs |
 
 ### Kubernetes Images for Open Source 
 
