@@ -15,9 +15,7 @@ For further information follow the official guidelines: https://kubernetes.io/do
 
 ## Installation
 
-## Installation
-
-Download the binary file according to your OS at the following link: https://epos-ci.brgm.fr/epos/opensource-kubernetes/-/packages 
+Download the binary file according to your OS.
 
 Give permissions on `epos-kubernetes-cli` file and move on binary folder from a Terminal (in Linux/MacOS):
 
