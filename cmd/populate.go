@@ -144,6 +144,25 @@ var populateCmd = & cobra.Command {
         } else {
             fmt.Println("You need to define a folder")
         }
+
+        command := exec.Command("kubectl",
+                    "exec",
+                    "redis-server",
+                    "-n",
+                    namespace,
+                    "--",
+                    "redis-cli",
+                    "FLUSHALL")
+
+            cmd.Println(command.String())
+
+            command.Stdout = os.Stdout
+            command.Stderr = os.Stderr
+            if err := command.Run();
+            err != nil {
+                log.Fatal("Error flushing redis container...\n")
+                log.Fatal(err)
+            }
         print_urls()
     },
 }

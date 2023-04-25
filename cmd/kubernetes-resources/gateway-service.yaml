@@ -32,8 +32,6 @@ spec:
       annotations:
         docker-metadata: DOCKER-METADATA
     spec:
-      imagePullSecrets:
-      - name: epos-ics-c-tests-docker-registry-secret # this line is important!
       containers:
       - name: gateway
         image: ${DOCKER_REGISTRY}/${GATEWAY_IMAGE}

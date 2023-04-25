@@ -37,9 +37,6 @@ var (
     //go:embed "kubernetes-resources/data-metadata-service.yaml"
     dataMetadata []byte
 
-    //go:embed "kubernetes-resources/epos-gui.yaml"
-    eposGUI []byte
-
     //go:embed "kubernetes-resources/external-access-service.yaml"
     externalAccess []byte
 
@@ -55,8 +52,8 @@ var (
     //go:embed "kubernetes-resources/metadata-database.yaml"
     metadataDatabase []byte
 
-    //go:embed "kubernetes-resources/processing-access-service.yaml"
-    processingAccess []byte
+    //go:embed "kubernetes-resources/redis-database.yaml"
+    redisDatabase []byte
 
     //go:embed "kubernetes-resources/rabbitmq-operator.yaml"
     operator []byte
