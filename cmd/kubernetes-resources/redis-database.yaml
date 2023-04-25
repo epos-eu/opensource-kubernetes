@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-server
+  template:
+    metadata:
+      labels:
+        app: redis-server
+        version: ${DEPLOY_TAG}
+    spec:
+      containers:
+      - name: redis-server
+        image: redis
+        args: ["--appendonly", "yes"]
+        ports:
+          - name: redis-server
+            containerPort: 6379
+        livenessProbe:
+          tcpSocket:
+            port: redis-server # named port
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          periodSeconds: 5
+          failureThreshold: 5
+          successThreshold: 1
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 20
+          timeoutSeconds: 5
+          periodSeconds: 3
+        volumeMounts:
+          - name: lv-storage
+            mountPath: /data
+        env:
+            - name: ALLOW_EMPTY_PASSWORD
+              value: "yes"
+      volumes:
+        - name: lv-storage
+          persistentVolumeClaim:
+            claimName: redis-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: redis-server
+  labels:
+    app: redis-server
+    version: ${DEPLOY_TAG}
+spec:
+  selector:
+    app: redis-server
+    version: ${DEPLOY_TAG}
+  ports:
+  - protocol: TCP
+    port: 6379

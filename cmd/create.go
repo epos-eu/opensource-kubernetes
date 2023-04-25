@@ -125,11 +125,11 @@ var deployCmd = & cobra.Command {
         }
         metadatadatabasefile := generateTempFile(metadataDatabase)
 
-        processingAccess, err = envsubst.Bytes([]byte(processingAccess))
+        redisDatabase, err = envsubst.Bytes([]byte(redisDatabase))
         if err != nil {
             log.Fatal(err)
         }
-        processingaccessfile := generateTempFile(processingAccess)
+        redisdatabasefile := generateTempFile(redisDatabase)
 
         resources, err = envsubst.Bytes([]byte(resources))
         if err != nil {
@@ -143,21 +143,15 @@ var deployCmd = & cobra.Command {
         }
         gatewayfile := generateTempFile(gateway)
 
-        eposGUI, err = envsubst.Bytes([]byte(eposGUI))
-        if err != nil {
-            log.Fatal(err)
-        }
-        eposguifile := generateTempFile(eposGUI)
-
         converter, err = envsubst.Bytes([]byte(converter))
         if err != nil {
             log.Fatal(err)
         }
         converterfile := generateTempFile(converter)
 
-        list_of_services:= [14]string{rabbitmqoperatorfile, rabbitmqfile, loggingfile, secretsfile, 
+        list_of_services:= [13]string{rabbitmqoperatorfile, rabbitmqfile, loggingfile, secretsfile, 
             backofficefile, datametadatafile, externalaccessfile, ingestorfile, metadatadatabasefile, 
-            processingaccessfile, resourcesfile, gatewayfile, eposguifile, converterfile}
+            redisdatabasefile, resourcesfile, gatewayfile, converterfile}
 
         if err := godotenv.Load(env);
         err != nil {
@@ -191,7 +185,7 @@ var deployCmd = & cobra.Command {
 
         time.Sleep(10 * time.Second)
 
-        for i:= 1; i < 14; i++{
+        for i:= 1; i < 13; i++{
 
             execute_command(cmd,exec.Command(
             "kubectl",

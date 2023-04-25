@@ -32,8 +32,6 @@ spec:
       annotations:
         docker-metadata: DOCKER-METADATA
     spec:
-      imagePullSecrets:
-      - name: epos-ics-c-tests-docker-registry-secret # this line is important!
       containers:
       - name: resources-service
         image: ${DOCKER_REGISTRY}/${RESOURCES_SERVICE_IMAGE}
@@ -68,6 +66,11 @@ spec:
             secretKeyRef:
               name: systemsecrets
               key: facets_default
+        - name: REDIS_SERVER
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: redis_server
         imagePullPolicy: Always
         resources:
           requests:

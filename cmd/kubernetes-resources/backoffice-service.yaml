@@ -32,8 +32,6 @@ spec:
       annotations:
         docker-metadata: DOCKER-METADATA
     spec:
-      imagePullSecrets:
-      - name: epos-ics-c-tests-docker-registry-secret 
       containers:
       - name: backoffice-service
         image: ${DOCKER_REGISTRY}/${BACKOFFICE_SERVICE_IMAGE}
