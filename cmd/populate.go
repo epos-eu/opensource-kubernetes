@@ -146,13 +146,12 @@ var populateCmd = & cobra.Command {
         }
 
         command := exec.Command("kubectl",
-                    "exec",
-                    "redis-server",
+                    "rollout",
+                    "restart",
+                    "deployment",
                     "-n",
                     namespace,
-                    "--",
-                    "redis-cli",
-                    "FLUSHALL")
+                    "redis-server")
 
             cmd.Println(command.String())
 
