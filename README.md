@@ -6,7 +6,7 @@
 EPOS Open Source - Kubernetes installer is part of the EPOS Open Source project for local installation using Kubernetes.
 It contains a set of Kubernetes images to deploy the EPOS ecosystem. 
 
-Use `epos-kubernetes-cli` binary to spin up local environment on Linux, Mac OS X or Windows.
+Use `opensource-kubernetes` binary to spin up local environment on Linux, Mac OS X or Windows.
 
 ## Prerequisites
 
@@ -19,17 +19,17 @@ For further information follow the official guidelines: https://kubernetes.io/do
 
 Download the binary file according to your OS at the following link: https://epos-ci.brgm.fr/epos/opensource-kubernetes/-/packages 
 
-Give permissions on `epos-kubernetes-cli` file and move on binary folder from a Terminal (in Linux/MacOS):
+Give permissions on `opensource-kubernetes` file and move on binary folder from a Terminal (in Linux/MacOS):
 
 ```
-chmod +x epos-kubernetes-cli
-sudo mv epos-kubernetes-cli /usr/local/bin/epos-kubernetes-cli
+chmod +x opensource-kubernetes
+sudo mv opensource-kubernetes /usr/local/bin/opensource-kubernetes
 ```
 
 ## Usage
 
 ```
-./epos-kubernetes-cli <command>
+./opensource-kubernetes <command>
 ```
 
 The `<command>` field value is one of the following listed below:
@@ -38,7 +38,7 @@ The `<command>` field value is one of the following listed below:
 EPOS Open Source CLI installer to deploy the EPOS System using Kubernetes
 
 Usage:
-  epos-kubernetes-cli [command]
+  opensource-kubernetes [command]
 
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
@@ -49,10 +49,10 @@ Available Commands:
   populate    Populate the existing environment with metadata information
 
 Flags:
-  -h, --help      help for epos-kubernetes-cli
-  -v, --version   version for epos-kubernetes-cli
+  -h, --help      help for opensource-kubernetes
+  -v, --version   version for opensource-kubernetes
 
-Use "epos-kubernetes-cli [command] --help" for more information about a command.
+Use "opensource-kubernetes [command] --help" for more information about a command.
 ```
 
 ## Deploy a new environment
@@ -61,7 +61,7 @@ Use "epos-kubernetes-cli [command] --help" for more information about a command.
 Deploy an enviroment with .env set up on Kubernetes
 
 Usage:
-  epos-kubernetes-cli deploy [flags]
+  opensource-kubernetes deploy [flags]
 
 Flags:
       --context string     Kubernetes context
@@ -76,7 +76,7 @@ Flags:
 Delete an enviroment on Kubernetes using Namespace
 
 Usage:
-  epos-kubernetes-cli delete [flags]
+  opensource-kubernetes delete [flags]
 
 Flags:
       --context string     Kubernetes context
@@ -94,7 +94,7 @@ Download or create TTL files according to EPOS-DCAT-AP and use the following com
 Populate the existing environment with metadata information in a specific folder
 
 Usage:
-  epos-kubernetes-cli populate [flags]
+  opensource-kubernetes populate [flags]
 
 Flags:
       --env string         Environment variable file
@@ -113,7 +113,7 @@ Use the API Gateway endpoint to manually ingest metadata TTL files into the cata
 Export configuration files for customization in output folder, options: [env]
 
 Usage:
-  epos-kubernetes-cli export [flags]
+  opensource-kubernetes export [flags]
 
 Flags:
       --file string     File to export, available options: [env]
