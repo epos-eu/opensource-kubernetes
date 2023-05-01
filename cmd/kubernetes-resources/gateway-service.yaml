@@ -132,7 +132,7 @@ spec:
   rules:
   - http:
       paths:
-      - path: ${DEPLOY_PATH}api/webapi/v1.3/
+      - path: ${DEPLOY_PATH}api/v1/
         pathType: Prefix
         backend:
           service:
