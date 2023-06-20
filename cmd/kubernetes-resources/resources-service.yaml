@@ -66,6 +66,11 @@ spec:
             secretKeyRef:
               name: systemsecrets
               key: facets_default
+        - name: FACETS_TYPE_DEFAULT
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: facets_type_default
         - name: REDIS_SERVER
           valueFrom:
             secretKeyRef:
