@@ -60,7 +60,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: systemsecrets
-              key: gateway_load_backoffice_api
+              key: gateway_load_backoffice_api 
         - name: IS_MONITORING_AUTH
           valueFrom:
             secretKeyRef:
@@ -71,6 +71,16 @@ spec:
             secretKeyRef:
               name: systemsecrets
               key: is_aai_enabled
+        - name: SECURITY_KEY
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: gateway_jwt_key
+        - name: AAI_SERVICE_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: aai_service_endpoint
         imagePullPolicy: Always
         resources:
           requests:
