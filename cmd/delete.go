@@ -20,38 +20,23 @@ package cmd
 
 import (
 	_ "embed"
+
+	"github.com/epos-eu/opensource-kubernetes/cmd/methods"
 	"github.com/spf13/cobra"
-	"os"
-	"os/exec"
 )
 
 var deleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete an environment on Kubernetes",
 	Long:  `Delete an enviroment on Kubernetes using Namespace`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		context, _ := cmd.Flags().GetString("context")
 		namespace, _ := cmd.Flags().GetString("namespace")
-		setupIPs()
-		printSetupShort(context, namespace)
-		command := exec.Command("kubectl",
-			"config",
-			"use-context",
-			context)
-		command.Stdout = os.Stdout
-		command.Stderr = os.Stderr
-		if err := command.Run(); err != nil {
-			printError("Error on executing command, cause:" + err.Error())
+
+		if err := methods.DeleteEnvironment(context, namespace); err != nil {
+			return err
 		}
-		command = exec.Command("kubectl",
-			"delete",
-			"ns",
-			namespace)
-		command.Stdout = os.Stdout
-		command.Stderr = os.Stderr
-		if err := command.Run(); err != nil {
-			printError("Error on executing command, cause:" + err.Error())
-		}
+		return nil
 	},
 }
 

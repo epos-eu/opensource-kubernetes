@@ -1,5 +1,5 @@
 /*
-   EPOS Open Source - Local installation with Docker
+   EPOS Open Source - Local installation with Kubernetes
    Copyright (C) 2023  EPOS ERIC
 
    This program is free software: you can redistribute it and/or modify
@@ -16,22 +16,24 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 //file: ./cmd/functions.go
-package cmd
+package methods
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/go-github/v52/github"
-	"github.com/hashicorp/go-version"
-	"github.com/jedib0t/go-pretty/v6/table"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/google/go-github/v52/github"
+	"github.com/hashicorp/go-version"
+	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 const colorReset = "\033[0m"
@@ -79,11 +81,42 @@ type Response struct {
 	} `json:"results"`
 }
 
-func setupIPs() {
+func OverridePorts(update string) error {
+
+	if update == "true" {
+		PrintNotification("No ports check needed, update=true")
+		return nil
+	} else {
+		ports := [2]string{"API_PORT", "DATA_PORTAL_PORT"}
+
+		for i := 0; i < len(ports); i++ {
+			PrintNotification("Checking availability of " + ports[i] + " " + os.Getenv(ports[i]))
+			isPortAvailable, err := IsPortAvailable(os.Getenv(ports[i]))
+			if err != nil {
+				PrintError("Problem on retrieving the availability for the port for " + ports[i] + " error: " + err.Error())
+				return err
+			}
+			if isPortAvailable {
+				PrintNotification("Port " + ports[i] + " " + os.Getenv(ports[i]) + " available")
+			} else {
+				port, err := GetAvailablePort()
+				if err != nil {
+					PrintError("Problem on assigning a free port for " + ports[i] + " error: " + err.Error())
+					return err
+				}
+				os.Setenv(ports[i], port)
+				PrintNotification("Port " + ports[i] + " " + os.Getenv(ports[i]) + " available")
+			}
+		}
+	}
+	return nil
+}
+
+func SetupIPs() error {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
-		printError("Dial udp 8.8.8.8:80")
-		os.Exit(0)
+		PrintError("Dial udp 8.8.8.8:80")
+
 	}
 	defer conn.Close()
 
@@ -93,11 +126,12 @@ func setupIPs() {
 	os.Setenv("EXECUTE_HOST", "http://"+localAddr.IP.String()+":"+os.Getenv("API_PORT"))
 	os.Setenv("HOST", "http://"+localAddr.IP.String()+":"+os.Getenv("GUI_PORT"))
 	os.Setenv("LOCAL_IP", localAddr.IP.String())
+	return nil
 }
 
-func print_urls() {
+func PrintUrls() {
 
-	fmt.Println(string(colorCyan), `Open Source Docker deploy
+	fmt.Println(string(colorCyan), `Open Source Kubernetes deploy
 
      &&&&&&&&&&&&&&&&&& *&&&&&&&%&&&%               *****************               &&&&&&/         
      &&&&&&&&&&&&&&&&&& *&&&&&&&&&&&&&&&&&       **  **********  *******       &&&&&&&&&&&&&&&&&    
@@ -114,60 +148,111 @@ func print_urls() {
     Copyright (C) 2023  EPOS ERIC`, string(colorReset))
 	t := table.NewWriter()
 	t.SetTitle("EPOS ACCESS POINTS")
-	t.AppendRow(table.Row{"EPOS API Gateway", "http://" + os.Getenv("LOCAL_IP") + os.Getenv("DEPLOY_PATH") + os.Getenv("API_PATH") + "/ui/"})
+	t.AppendRow(table.Row{"EPOS Data Portal", "http://" + os.Getenv("LOCAL_IP") + os.Getenv("BASE_CONTEXT")})
+	t.AppendRow(table.Row{"EPOS API Gateway", "http://" + os.Getenv("LOCAL_IP") + os.Getenv("BASE_CONTEXT") + os.Getenv("API_PATH") + "/ui/"})
 	t.SetStyle(table.StyleColoredBlackOnGreenWhite)
 	fmt.Println(t.Render())
 }
 
-func printError(message string) {
+func PrintError(message string) {
 	fmt.Println(string(colorRed), "[ERROR] "+message, string(colorReset))
 }
-func printTask(message string) {
+func PrintTask(message string) {
 	fmt.Println(string(colorGreen), "[TASK] "+message, string(colorReset))
 }
+func PrintWait(message string) {
+	fmt.Println(string(colorYellow), "[WAITING] "+message, string(colorReset))
+}
+func PrintNotification(message string) {
+	fmt.Println(string(colorPurple), "[NOTIFICATION] "+message, string(colorReset))
+}
+func PrintNewVersionAvailable(message string) {
+	fmt.Println(string(colorYellow), "[NEW VERSION AVAILABLE] "+message, string(colorReset))
+}
 
-func generateTempFile(text []byte) string {
-	tmpFile, err := ioutil.TempFile("", fmt.Sprintf("%s-", filepath.Base(os.Args[0])))
+func GenerateTempFile(dname string, filetype string, text []byte) (string, error) {
+
+	tmpFile, err := ioutil.TempFile(dname, filetype)
 	if err != nil {
-		printError("Could not create temporary file, cause " + err.Error())
-		os.Exit(0)
+		PrintError("Could not create temporary file, cause " + err.Error() + " error: " + err.Error())
+		return "", err
 	}
 	defer tmpFile.Close()
 	name := tmpFile.Name()
 	if _, err = tmpFile.Write(text); err != nil {
-		printError("Unable to write to temporary file, cause " + err.Error())
-		os.Exit(0)
+		PrintError("Unable to write to temporary file, cause " + err.Error() + " error: " + err.Error())
+		return "", err
 	}
-	return name
+	PrintNotification("File " + name + " created successfully")
+
+	return name, nil
 }
 
-func generateFile(text []byte, filePath string) {
+func CreateDirectory(dir string) error {
+	if _, err := os.Stat(os.TempDir() + os.Getenv("PREFIX")); os.IsNotExist(err) {
+		err := os.Mkdir(os.TempDir()+os.Getenv("PREFIX"), 0755)
+		if err != nil {
+			PrintError("Could not create temporary folder, cause " + err.Error() + " error: " + err.Error())
+		}
+		PrintTask("Directory" + dir + " created successfully")
+	} else {
+		PrintNotification("Directory " + dir + " already exists, using it")
+	}
+	return nil
+}
+
+func RemoveContents(dir string) error {
+	if _, err := os.Stat(os.TempDir() + os.Getenv("PREFIX")); err == nil {
+		d, err := os.Open(dir)
+		if err != nil {
+			return err
+		}
+		defer d.Close()
+		names, err := d.Readdirnames(-1)
+		if err != nil {
+			return err
+		}
+		for _, name := range names {
+			err = os.RemoveAll(filepath.Join(dir, name))
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		PrintNotification("Directory " + dir + " already exists, using it")
+	}
+	return nil
+}
+
+func GenerateFile(text []byte, filePath string) error {
 	err := ioutil.WriteFile(filePath, text, 0777)
 	if err != nil {
-		printError("Could not create file, cause " + err.Error())
-		os.Exit(0)
+		PrintError("Could not create file, cause " + err.Error())
+		return err
 	}
+	return nil
 }
 
-func getLastTag() {
+func GetLastTag() error {
 	client := github.NewClient(nil)
-	tags, _, err := client.Repositories.ListTags(context.Background(), "epos-eu", "opensource-docker", nil)
+	tags, _, err := client.Repositories.ListTags(context.Background(), "epos-eu", "opensource-kubernetes", nil)
 	if err != nil {
-		printError("Could not retrieve tags of the repository, cause " + err.Error())
-		os.Exit(0)
+		PrintError("Could not retrieve tags of the repository, cause " + err.Error())
+		return err
 	}
 	if len(tags) > 0 {
 		latestTag := tags[0]
-		currentVersion := getVersion()
+		currentVersion := GetVersion()
 		v1, _ := version.NewVersion(currentVersion)
 		v2, _ := version.NewVersion(latestTag.GetName())
 		if v1.LessThan(v2) {
-			fmt.Println(string(colorPurple), "New version available "+v1.String()+" ---> "+v2.String(), string(colorReset))
+			PrintNewVersionAvailable(v1.String() + " ---> " + v2.String())
 		}
 	}
+	return nil
 }
 
-func printSetup(env string, context string, namespace string, tag string) {
+func PrintSetup(env string, context string, namespace string, tag string) {
 
 	t := table.NewWriter()
 	t.SetTitle("DEPLOY CONFIGURATION")
@@ -188,7 +273,7 @@ func printSetup(env string, context string, namespace string, tag string) {
 
 }
 
-func printSetupShort(context string, namespace string) {
+func PrintSetupShort(context string, namespace string) {
 
 	t := table.NewWriter()
 	t.SetTitle("DEPLOY CONFIGURATION")
@@ -207,15 +292,18 @@ func printSetupShort(context string, namespace string) {
 
 }
 
-func checkImagesUpdate() {
+func CheckImagesUpdate() error {
 	t := table.NewWriter()
-	t.SetTitle("Docker Images updated")
+	t.SetTitle("Kubernetes Images updated")
 	t.AppendHeader(table.Row{"Default Image", "New Image"})
 	for _, env := range os.Environ() {
 		splitted := strings.Split(env, "=")
 		if strings.HasSuffix(splitted[0], "_IMAGE") && splitted[0] != "MESSAGE_BUS_IMAGE" && splitted[0] != "REDIS_IMAGE" {
 			imageRepositoryName := strings.Split(splitted[1], ":")
-			latestImageTag := getLastDockerImageTag(imageRepositoryName[0])
+			latestImageTag, err := GetLastDockerImageTag(imageRepositoryName[0])
+			if err != nil {
+				return err
+			}
 			if latestImageTag != imageRepositoryName[1] {
 				os.Setenv(splitted[0], imageRepositoryName[0]+":"+latestImageTag)
 				t.AppendRow(table.Row{splitted[1], imageRepositoryName[0] + ":" + latestImageTag})
@@ -224,21 +312,51 @@ func checkImagesUpdate() {
 	}
 	t.SetStyle(table.StyleColoredRedWhiteOnBlack)
 	fmt.Println(t.Render())
+	return nil
 }
 
-func getLastDockerImageTag(repo string) string {
+func GetLastDockerImageTag(repo string) (string, error) {
 	response := Response{}
 	namespace := "epos"
 	resp, err := http.Get("https://hub.docker.com/v2/repositories/" + namespace + "/" + repo + "/tags?page_size=2")
 	if err != nil {
-		printError("Can't retrieve tags from dockerhub")
-		os.Exit(0)
+		PrintError("Can't retrieve tags from dockerhub, error: " + err.Error())
+		return "", err
 	}
 	json.NewDecoder(resp.Body).Decode(&response)
 	defer resp.Body.Close()
-	return response.Results[1].Name
+	return response.Results[1].Name, nil
 }
 
-func getVersion() string {
-	return "0.3.0"
+func IsPortAvailable(port string) (bool, error) {
+	portInt, err := strconv.Atoi(port)
+	if err != nil || portInt < 1 || portInt > 65535 {
+		return false, err
+	}
+	ln, err := net.Dial("tcp", "localhost:"+port)
+	if err != nil {
+		return true, nil
+	}
+	defer ln.Close()
+	return false, nil
+}
+
+func GetAvailablePort() (string, error) {
+	const maxAttempts = 10
+	for i := 0; i < maxAttempts; i++ {
+		ln, err := net.Listen("tcp", ":0")
+		if err != nil {
+			return "", err
+		}
+		defer ln.Close()
+		addr := ln.Addr().String()
+		parts := strings.Split(addr, ":")
+		port := parts[len(parts)-1]
+		return port, nil
+	}
+	return "", fmt.Errorf("could not find an available port")
+}
+
+func GetVersion() string {
+	return "1.0.0"
 }

@@ -16,26 +16,36 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: resources-deployment 
+  name: external-access-deployment
 spec:
-  replicas: 1 # maybe more, no problem should happen with software heart 
+  replicas: 1 # maybe more, no problem should happen with software heart
   revisionHistoryLimit: 0
   selector:
     matchLabels:
-      app: epos-resources
+      app: epos-external-access
       version: ${DEPLOY_TAG}
   template:
     metadata:
       labels:
-        app: epos-resources
+        app: epos-external-access
         version: ${DEPLOY_TAG}
       annotations:
         docker-metadata: DOCKER-METADATA
     spec:
       containers:
-      - name: resources-service
-        image: ${DOCKER_REGISTRY}/${RESOURCES_SERVICE_IMAGE}
+      - name: external-access-service
+        image: ${DOCKER_REGISTRY}/${EXTERNAL_ACCESS_IMAGE}
         env:
+        - name: APIHOST
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: api_host
+        - name: APICONTEXT
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: api_context
         - name: BROKER_HOST
           valueFrom:
             secretKeyRef:
@@ -61,38 +71,51 @@ spec:
             secretKeyRef:
               name: systemsecrets
               key: base_context
-        - name: FACETS_DEFAULT
+        - name: PERSISTENCE_NAME
           valueFrom:
             secretKeyRef:
               name: systemsecrets
-              key: facets_default
-        - name: FACETS_TYPE_DEFAULT
+              key: persistence_name
+        - name: POSTGRESQL_CONNECTION_STRING
           valueFrom:
             secretKeyRef:
               name: systemsecrets
-              key: facets_type_default
-        - name: REDIS_SERVER
+              key: postgresql_connection_string
+        - name: CONNECTION_POOL_INIT_SIZE
           valueFrom:
             secretKeyRef:
               name: systemsecrets
-              key: redis_server
+              key: datametadataservice_connectionpoolinitsize
+        - name: CONNECTION_POOL_MIN_SIZE
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: datametadataservice_connectionpoolminsize
+        - name: CONNECTION_POOL_MAX_SIZE
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: datametadataservice_connectionpoolmaxsize
         imagePullPolicy: Always
         resources:
           requests:
             cpu: 10m
             memory: 100Mi # have to be more than 50MB
+          limits:
+            cpu: 2000m
+            memory: 3072Mi
         ports:
         - containerPort: 8080
-          name: resources-port
+          name: external-port
         volumeMounts:
-          - name: resources-pvc
-            mountPath: /resources
+          - name: external-access-pvc
+            mountPath: /external-access
           - name: logging-config-volume
             mountPath: /etc/log4j2/
       volumes:
-        - name: resources-pvc
+        - name: external-access-pvc
           persistentVolumeClaim:
-            claimName: resources-pvc
+            claimName: external-access-pvc
         - name: logging-config-volume
           configMap:
             name: logging-config
@@ -100,7 +123,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: resources-pvc
+  name: external-access-pvc
 spec:
   accessModes:
   - ReadWriteOnce
@@ -111,13 +134,13 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: resources-service
+  name: external-access-service
   labels:
-    app: epos-resources
+    app: epos-external-access
     version: ${DEPLOY_TAG}
 spec:
   selector:
-    app: epos-resources
+    app: epos-external-access
     version: ${DEPLOY_TAG}
   ports:
   - protocol: TCP
@@ -126,21 +149,21 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: resources-ingress
+  name: external-access-ingress
   labels:
-    app: epos-resources
+    app: epos-external-access
     version: ${DEPLOY_TAG}
   annotations:
-    kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/rewrite-target: ${DEPLOY_PATH}api/external-access-service/v1/
 spec:
+  ingressClassName: ${INGRESS_CLASS}
   rules:
   - http:
       paths:
-      - path: ${DEPLOY_PATH}api/resources-service/v1/
+      - path: ${DEPLOY_PATH}api/external-access-service/v1/
         pathType: Prefix
         backend:
           service:
-            name: resources-service
+            name: external-access-service
             port:
               number: 8080

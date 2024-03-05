@@ -36,6 +36,31 @@ spec:
       - name: converter-service
         image: ${DOCKER_REGISTRY}/${CONVERTER_IMAGE}
         env:
+        - name: PERSISTENCE_NAME
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: persistence_name
+        - name: POSTGRESQL_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: postgresql_connection_string
+        - name: CONNECTION_POOL_INIT_SIZE
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: datametadataservice_connectionpoolinitsize
+        - name: CONNECTION_POOL_MIN_SIZE
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: datametadataservice_connectionpoolminsize
+        - name: CONNECTION_POOL_MAX_SIZE
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: datametadataservice_connectionpoolmaxsize
         - name: BROKER_HOST
           valueFrom:
             secretKeyRef:

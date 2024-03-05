@@ -20,6 +20,8 @@ package cmd
 
 import (
 	_ "embed"
+
+	"github.com/epos-eu/opensource-kubernetes/cmd/methods"
 	"github.com/spf13/cobra"
 )
 
@@ -27,17 +29,15 @@ var exportCmd = &cobra.Command{
 	Use:   "export",
 	Short: "Export configuration files in output folder, options: [env]",
 	Long:  `Export configuration files for customization in output folder, options: [env]`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 
 		file, _ := cmd.Flags().GetString("file")
 		output, _ := cmd.Flags().GetString("output")
 
-		switch file {
-		case "env":
-			generateFile(configurations, output+"/configurations.env")
-		default:
-			printError("Invalid option, available options: [env]")
+		if err := methods.ExportVariablesEnvironment(file, output); err != nil {
+			return err
 		}
+		return nil
 	},
 }
 

@@ -15,13 +15,31 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-
-package main
+//file: ./cmd/methods/deletefunctions.go
+package methods
 
 import (
-	"github.com/epos-eu/opensource-kubernetes/cmd"
+	_ "embed"
+	"os/exec"
 )
 
-func main() {
-	cmd.ExecuteStandAlone()
+func DeleteEnvironment(context string, namespace string) error {
+	SetupIPs()
+	PrintSetupShort(context, namespace)
+
+	if err := ExecuteCommand(exec.Command("kubectl",
+		"config",
+		"use-context",
+		context)); err != nil {
+		return err
+	}
+
+	if err := ExecuteCommand(exec.Command("kubectl",
+		"delete",
+		"ns",
+		namespace)); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -20,155 +20,38 @@ package cmd
 
 import (
 	_ "embed"
-	"github.com/joho/godotenv"
+
+	"github.com/epos-eu/opensource-kubernetes/cmd/methods"
 	"github.com/spf13/cobra"
-	"net"
-	"net/http"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strconv"
-	"strings"
 )
 
 var populateCmd = &cobra.Command{
 	Use:   "populate",
 	Short: "Populate the existing environment with metadata information",
 	Long:  `Populate the existing environment with metadata information in a specific folder`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 
+		context, _ := cmd.Flags().GetString("context")
 		path, _ := cmd.Flags().GetString("folder")
 		env, _ := cmd.Flags().GetString("env")
 		namespace, _ := cmd.Flags().GetString("namespace")
+		tag, _ := cmd.Flags().GetString("tag")
 
-		fileInfo, err := os.Stat(path)
-		if err != nil {
-			printError("Loading env variables from " + env + " cause: " + err.Error())
-			os.Exit(0)
+		if err := methods.PopulateEnvironment(context, env, path, namespace, tag); err != nil {
+			return err
 		}
-
-		if env == "" {
-			env = generateTempFile(configurations)
-		}
-		if err := godotenv.Load(env); err != nil {
-			printError("Loading env variables from " + env + " cause: " + err.Error())
-			os.Exit(0)
-		}
-
-		os.Setenv("DEPLOY_PATH", "/"+namespace+"/")
-
-		freePortOk := false
-		free_port, err := GetFreePort()
-		for freePortOk {
-			if free_port != 0 {
-				freePortOk = true
-			} else {
-				printError("Free port is not available, cause" + err.Error())
-				free_port, err = GetFreePort()
-			}
-		}
-		free_port_string := strconv.Itoa(free_port)
-
-		setupIPs()
-
-		if fileInfo.IsDir() {
-			command := exec.Command("docker",
-				"run",
-				"-idt",
-				"--name",
-				"tmc",
-				"-p",
-				free_port_string+":80",
-				"-v",
-				strings.Trim(path, " ")+":/usr/share/nginx/html",
-				"nginx")
-			command.Stdout = os.Stdout
-			command.Stderr = os.Stderr
-			if err := command.Run(); err != nil {
-				printError("Creating metadata-cache container, cause " + err.Error())
-				os.Exit(0)
-			}
-
-			filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
-				if err != nil {
-					printError("Error in walk in dir, cause " + err.Error())
-					os.Exit(0)
-				}
-				if strings.HasSuffix(info.Name(), ".ttl") {
-					printTask("Ingestion file into database: " + info.Name())
-					posturl := "http://" + os.Getenv("LOCAL_IP") + os.Getenv("DEPLOY_PATH") + os.Getenv("API_PATH") + "/ingestor"
-					r, err := http.NewRequest("POST", posturl, nil)
-					if err != nil {
-						printError("Ingesting file into database, cause " + err.Error())
-					}
-					r.Header.Add("accept", "*/*")
-					r.Header.Add("path", "http://"+os.Getenv("LOCAL_IP")+":"+free_port_string+"/"+info.Name())
-					r.Header.Add("securityCode", "CodiceDiTest")
-					r.Header.Add("type", "single")
-					client := &http.Client{}
-					res, err := client.Do(r)
-					if err != nil {
-						printError("Ingesting file into database, cause " + err.Error())
-					}
-					defer res.Body.Close()
-				}
-				return nil
-			})
-			command = exec.Command("docker",
-				"rm",
-				"-f",
-				"tmc")
-			command.Stdout = os.Stdout
-			command.Stderr = os.Stderr
-			if err := command.Run(); err != nil {
-				printError("Deleting metadata-cache container, cause " + err.Error())
-				os.Exit(0)
-			}
-		} else {
-			printError("You need to define a folder!")
-			os.Exit(0)
-		}
-
-		command := exec.Command("kubectl",
-			"rollout",
-			"restart",
-			"deployment",
-			"-n",
-			namespace,
-			"redis-server")
-
-		cmd.Println(command.String())
-
-		command.Stdout = os.Stdout
-		command.Stderr = os.Stderr
-		if err := command.Run(); err != nil {
-			printError("Flushing redis container, cause " + err.Error())
-			os.Exit(0)
-		}
-		print_urls()
+		return nil
 	},
 }
 
-func GetFreePort() (int, error) {
-	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
-	if err != nil {
-		printError("Resolve TCPAddr, cause " + err.Error())
-		os.Exit(0)
-	}
-
-	l, err := net.ListenTCP("tcp", addr)
-	if err != nil {
-		printError("Listening TCPAddr, cause " + err.Error())
-		os.Exit(0)
-	}
-	defer l.Close()
-	return l.Addr().(*net.TCPAddr).Port, nil
-}
-
 func init() {
+	populateCmd.Flags().String("context", "", "Kubernetes context")
+	populateCmd.MarkFlagRequired("context")
 	populateCmd.Flags().String("folder", "", "Folder where ttl files are located")
 	populateCmd.MarkFlagRequired("folder")
 	populateCmd.Flags().String("env", "", "Environment variable file")
 	populateCmd.Flags().String("namespace", "", "Kubernetes namespace")
 	populateCmd.MarkFlagRequired("namespace")
+	populateCmd.Flags().String("tag", "", "Version Tag")
+	populateCmd.MarkFlagRequired("tag")
 }

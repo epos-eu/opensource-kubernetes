@@ -15,13 +15,22 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-
-package main
+//file: ./cmd/methods/exportfunctions.go
+package methods
 
 import (
-	"github.com/epos-eu/opensource-kubernetes/cmd"
+	_ "embed"
 )
 
-func main() {
-	cmd.ExecuteStandAlone()
+func ExportVariablesEnvironment(file string, output string) error {
+
+	switch file {
+	case "env":
+		if err := GenerateFile(configurations, output+"/configurations.env"); err != nil {
+			return err
+		}
+	default:
+		PrintError("Invalid option, available options: [env]")
+	}
+	return nil
 }

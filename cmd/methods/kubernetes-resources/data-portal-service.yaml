@@ -16,76 +16,53 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: external-access-deployment
+  name: portal-deployment 
 spec:
-  replicas: 1 # maybe more, no problem should happen with software heart
+  replicas: 1 # maybe more, no problem should happen with software heart 
   revisionHistoryLimit: 0
   selector:
     matchLabels:
-      app: epos-external-access
+      app: epos-portal
       version: ${DEPLOY_TAG}
   template:
     metadata:
       labels:
-        app: epos-external-access
+        app: epos-portal
         version: ${DEPLOY_TAG}
       annotations:
         docker-metadata: DOCKER-METADATA
     spec:
       containers:
-      - name: external-access-service
-        image: ${DOCKER_REGISTRY}/${EXTERNAL_ACCESS_IMAGE}
+      - name: portal
+        image: ${DOCKER_REGISTRY}/${DATA_PORTAL_IMAGE}
         env:
-        - name: BROKER_HOST
+        - name: BASE_URL
           valueFrom:
             secretKeyRef:
               name: systemsecrets
-              key: broker_host
-        - name: BROKER_USERNAME
+              key: base_url
+        - name: API_HOST
           valueFrom:
             secretKeyRef:
               name: systemsecrets
-              key: broker_username
-        - name: BROKER_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: systemsecrets
-              key: broker_password
-        - name: BROKER_VHOST
-          valueFrom:
-            secretKeyRef:
-              name: systemsecrets
-              key: broker_vhost
-        - name: BASECONTEXT
-          valueFrom:
-            secretKeyRef:
-              name: systemsecrets
-              key: base_context
-        - name: REDIS_SERVER
-          valueFrom:
-            secretKeyRef:
-              name: systemsecrets
-              key: redis_server
+              key: gateway_host
         imagePullPolicy: Always
         resources:
           requests:
             cpu: 10m
             memory: 100Mi # have to be more than 50MB
-          limits:
-            cpu: 2000m
-            memory: 3072Mi
         ports:
-        - containerPort: 8080
-          name: external-port
+        - containerPort: 80
+          name: portal-port
         volumeMounts:
-          - name: external-access-pvc
-            mountPath: /external-access
+          - name: portal-pvc
+            mountPath: /portal
           - name: logging-config-volume
             mountPath: /etc/log4j2/
       volumes:
-        - name: external-access-pvc
+        - name: portal-pvc
           persistentVolumeClaim:
-            claimName: external-access-pvc
+            claimName: portal-pvc
         - name: logging-config-volume
           configMap:
             name: logging-config
@@ -93,7 +70,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: external-access-pvc
+  name: portal-pvc
 spec:
   accessModes:
   - ReadWriteOnce
@@ -104,36 +81,36 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: external-access-service
+  name: portal-service
   labels:
-    app: epos-external-access
+    app: epos-portal
     version: ${DEPLOY_TAG}
 spec:
   selector:
-    app: epos-external-access
+    app: epos-portal
     version: ${DEPLOY_TAG}
   ports:
   - protocol: TCP
-    port: 8080
+    port: 80
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: external-access-ingress
+  name: portal-ingress
   labels:
-    app: epos-external-access
+    app: epos-portal
     version: ${DEPLOY_TAG}
   annotations:
-    kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/rewrite-target: ${DEPLOY_PATH}dataportal/
 spec:
+  ingressClassName: ${INGRESS_CLASS}
   rules:
   - http:
       paths:
-      - path: /deploy/pathapi/external-access-service/v1/
+      - path: ${DEPLOY_PATH}dataportal/
         pathType: Prefix
         backend:
           service:
-            name: external-access-service
+            name: portal-service
             port:
-              number: 8080
+              number: 80

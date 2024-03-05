@@ -16,75 +16,74 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: ingestor-deployment
+  name: backoffice-deployment 
 spec:
-  replicas: 1 # maybe more, no problem should happen with software heart
+  replicas: 1 # maybe more, no problem should happen with software heart 
   revisionHistoryLimit: 0
   selector:
     matchLabels:
-      app: epos-ingestor
+      app: epos-backoffice
       version: ${DEPLOY_TAG}
   template:
     metadata:
       labels:
-        app: epos-ingestor
+        app: epos-backoffice
         version: ${DEPLOY_TAG}
       annotations:
-        docker-metadata: "DOCKER-METADATA"
+        docker-metadata: DOCKER-METADATA
     spec:
       containers:
-      - name: ingestor-service
-        image: ${DOCKER_REGISTRY}/${INGESTOR_IMAGE}
-        imagePullPolicy: Always
+      - name: backoffice-service
+        image: ${DOCKER_REGISTRY}/${BACKOFFICE_SERVICE_IMAGE}
         env:
-        - name: BROKER_HOST
+        - name: PERSISTENCE_NAME
           valueFrom:
             secretKeyRef:
               name: systemsecrets
-              key: broker_host
-        - name: BROKER_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: systemsecrets
-              key: broker_username
-        - name: BROKER_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: systemsecrets
-              key: broker_password
-        - name: BROKER_VHOST
-          valueFrom:
-            secretKeyRef:
-              name: systemsecrets
-              key: broker_vhost
+              key: persistence_name
         - name: POSTGRESQL_CONNECTION_STRING
           valueFrom:
             secretKeyRef:
               name: systemsecrets
               key: postgresql_connection_string
-        - name: INGESTOR_HASH
+        - name: CONNECTION_POOL_INIT_SIZE
           valueFrom:
             secretKeyRef:
               name: systemsecrets
-              key: ingestor_hash
+              key: datametadataservice_connectionpoolinitsize
+        - name: CONNECTION_POOL_MIN_SIZE
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: datametadataservice_connectionpoolminsize
+        - name: CONNECTION_POOL_MAX_SIZE
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: datametadataservice_connectionpoolmaxsize
         - name: BASECONTEXT
           valueFrom:
             secretKeyRef:
               name: systemsecrets
               key: base_context
+
+        imagePullPolicy: Always
         resources:
           requests:
             cpu: 10m
-            memory: 100Mi # have to be more than 50MB
+            memory: 100Mi
+        ports:
+        - containerPort: 8080
+          name: backoffice-port
         volumeMounts:
-          - name: ingestor-pvc
-            mountPath: /ingestor
+          - name: backoffice-pvc
+            mountPath: /backoffice
           - name: logging-config-volume
             mountPath: /etc/log4j2/
       volumes:
-        - name: ingestor-pvc
+        - name: backoffice-pvc
           persistentVolumeClaim:
-            claimName: ingestor-pvc
+            claimName: backoffice-pvc
         - name: logging-config-volume
           configMap:
             name: logging-config
@@ -92,7 +91,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: ingestor-pvc
+  name: backoffice-pvc
 spec:
   accessModes:
   - ReadWriteOnce
@@ -103,13 +102,13 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: ingestor-service
+  name: backoffice-service
   labels:
-    app: epos-ingestor
+    app: epos-backoffice
     version: ${DEPLOY_TAG}
 spec:
   selector:
-    app: epos-ingestor
+    app: epos-backoffice
     version: ${DEPLOY_TAG}
   ports:
   - protocol: TCP
@@ -118,21 +117,21 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ingestor-ingress
+  name: backoffice-ingress
   labels:
-    app: epos-ingestor
+    app: epos-backoffice
     version: ${DEPLOY_TAG}
   annotations:
-    kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/rewrite-target: ${DEPLOY_PATH}api/backoffice-service/v1/
 spec:
+  ingressClassName: ${INGRESS_CLASS}
   rules:
   - http:
       paths:
-      - path: ${DEPLOY_PATH}api/ingestor-service/v1/
+      - path: ${DEPLOY_PATH}api/backoffice-service/v1/
         pathType: Prefix
         backend:
           service:
-            name: ingestor-service
+            name: backoffice-service
             port:
               number: 8080

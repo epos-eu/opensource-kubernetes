@@ -16,52 +16,26 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: data-metadata-deployment
+  name: resources-deployment 
 spec:
-  replicas: 1 # maybe more, no problem should happen with software heart
+  replicas: 1 # maybe more, no problem should happen with software heart 
   revisionHistoryLimit: 0
   selector:
     matchLabels:
-      app: epos-data-metadata
+      app: epos-resources
       version: ${DEPLOY_TAG}
   template:
     metadata:
       labels:
-        app: epos-data-metadata
+        app: epos-resources
         version: ${DEPLOY_TAG}
       annotations:
         docker-metadata: DOCKER-METADATA
     spec:
       containers:
-      - name: data-metadata-service
-        image: ${DOCKER_REGISTRY}/${DATA_METADATA_SERVICE_IMAGE}
-        imagePullPolicy: Always
+      - name: resources-service
+        image: ${DOCKER_REGISTRY}/${RESOURCES_SERVICE_IMAGE}
         env:
-        - name: BROKER_HOST
-          valueFrom:
-            secretKeyRef:
-              name: systemsecrets
-              key: broker_host
-        - name: BROKER_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: systemsecrets
-              key: broker_username
-        - name: BROKER_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: systemsecrets
-              key: broker_password
-        - name: BROKER_VHOST
-          valueFrom:
-            secretKeyRef:
-              name: systemsecrets
-              key: broker_vhost
-        - name: POSTGRESQL_CONNECTION_STRING
-          valueFrom:
-            secretKeyRef:
-              name: systemsecrets
-              key: postgresql_connection_string
         - name: APIHOST
           valueFrom:
             secretKeyRef:
@@ -72,11 +46,6 @@ spec:
             secretKeyRef:
               name: systemsecrets
               key: api_context
-        - name: PERSISTENCE_NAME
-          valueFrom:
-            secretKeyRef:
-              name: systemsecrets
-              key: persistence_name
         - name: MONITORING
           valueFrom:
             secretKeyRef:
@@ -97,16 +66,16 @@ spec:
             secretKeyRef:
               name: systemsecrets
               key: monitoring_pwd
-        - name: NUM_OF_PUBLISHERS
+        - name: PERSISTENCE_NAME
           valueFrom:
             secretKeyRef:
               name: systemsecrets
-              key: datametadataservice_publishers
-        - name: NUM_OF_CONSUMERS
+              key: persistence_name
+        - name: POSTGRESQL_CONNECTION_STRING
           valueFrom:
             secretKeyRef:
               name: systemsecrets
-              key: datametadataservice_consumers
+              key: postgresql_connection_string
         - name: CONNECTION_POOL_INIT_SIZE
           valueFrom:
             secretKeyRef:
@@ -122,26 +91,38 @@ spec:
             secretKeyRef:
               name: systemsecrets
               key: datametadataservice_connectionpoolmaxsize
+        - name: BASECONTEXT
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: base_context        
+        - name: FACETS_DEFAULT
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: facets_default
+        - name: FACETS_TYPE_DEFAULT
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: facets_type_default
+        imagePullPolicy: Always
         resources:
           requests:
-            cpu: 30m
-            memory: 1Gi # have to be more than 50MB
-        livenessProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8080
-          initialDelaySeconds: 120
-          timeoutSeconds: 40
-          periodSeconds: 90
+            cpu: 10m
+            memory: 100Mi # have to be more than 50MB
+        ports:
+        - containerPort: 8080
+          name: resources-port
         volumeMounts:
-          - name: data-metadata-pvc
-            mountPath: /data-metadata
+          - name: resources-pvc
+            mountPath: /resources
           - name: logging-config-volume
             mountPath: /etc/log4j2/
       volumes:
-        - name: data-metadata-pvc
+        - name: resources-pvc
           persistentVolumeClaim:
-            claimName: data-metadata-pvc
+            claimName: resources-pvc
         - name: logging-config-volume
           configMap:
             name: logging-config
@@ -149,10 +130,47 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-metadata-pvc
+  name: resources-pvc
 spec:
   accessModes:
   - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: resources-service
+  labels:
+    app: epos-resources
+    version: ${DEPLOY_TAG}
+spec:
+  selector:
+    app: epos-resources
+    version: ${DEPLOY_TAG}
+  ports:
+  - protocol: TCP
+    port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: resources-ingress
+  labels:
+    app: epos-resources
+    version: ${DEPLOY_TAG}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: ${DEPLOY_PATH}api/resources-service/v1/
+spec:
+  ingressClassName: ${INGRESS_CLASS}
+  rules:
+  - http:
+      paths:
+      - path: ${DEPLOY_PATH}api/resources-service/v1/
+        pathType: Prefix
+        backend:
+          service:
+            name: resources-service
+            port:
+              number: 8080

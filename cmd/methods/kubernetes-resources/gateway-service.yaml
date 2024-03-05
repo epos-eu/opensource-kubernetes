@@ -41,6 +41,11 @@ spec:
             secretKeyRef:
               name: systemsecrets
               key: base_context
+        - name: PREFIX
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: gateway_prefix
         - name: LOAD_RESOURCES_API
           valueFrom:
             secretKeyRef:
@@ -60,7 +65,12 @@ spec:
           valueFrom:
             secretKeyRef:
               name: systemsecrets
-              key: gateway_load_backoffice_api 
+              key: gateway_load_backoffice_api
+        - name: LOAD_PROCESSING_API
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: gateway_load_processing_api
         - name: IS_MONITORING_AUTH
           valueFrom:
             secretKeyRef:
@@ -136,9 +146,9 @@ metadata:
     app: epos-gateway
     version: ${DEPLOY_TAG}
   annotations:
-    kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/rewrite-target: ${DEPLOY_PATH}api/v1/
 spec:
+  ingressClassName: ${INGRESS_CLASS}
   rules:
   - http:
       paths:
