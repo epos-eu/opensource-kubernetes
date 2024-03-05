@@ -19,5 +19,5 @@
 package methods
 
 func GetVersion() string {
-	return "1.0.0"
+	return "1.0.2"
 }
