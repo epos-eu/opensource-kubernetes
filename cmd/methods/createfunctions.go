@@ -104,7 +104,8 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 	}
 	SetupIPs()
 
-	operator, err = envsubst.Bytes([]byte(GetOperatorResourceEmbed()))
+	copyoperator := GetOperatorResourceEmbed()
+	operator, err = envsubst.Bytes([]byte(copyoperator))
 	if err != nil {
 		PrintError("Updating env variables of " + string(operator) + " cause: " + err.Error())
 
@@ -114,7 +115,8 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 		return err
 	}
 
-	rabbitmq, err = envsubst.Bytes([]byte(GetRabbitMQResourceEmbed()))
+	copyrabbitmq := GetRabbitMQResourceEmbed()
+	rabbitmq, err = envsubst.Bytes([]byte(copyrabbitmq))
 	if err != nil {
 		PrintError("Updating env variables of " + string(rabbitmq) + " cause: " + err.Error())
 		return err
@@ -125,7 +127,8 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 		return err
 	}
 
-	logging, err = envsubst.Bytes([]byte(GetLoggingResourceEmbed()))
+	copylogging := GetLoggingResourceEmbed()
+	logging, err = envsubst.Bytes([]byte(copylogging))
 	if err != nil {
 		PrintError("Updating env variables of " + string(logging) + " cause: " + err.Error())
 		return err
@@ -135,7 +138,8 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 		return err
 	}
 
-	secrets, err = envsubst.Bytes([]byte(GetSecretsResourceEmbed()))
+	copysecrets := GetSecretsResourceEmbed()
+	secrets, err = envsubst.Bytes([]byte(copysecrets))
 	if err != nil {
 		PrintError("Updating env variables of " + string(secrets) + " cause: " + err.Error())
 
@@ -145,7 +149,8 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 		return err
 	}
 
-	backoffice, err = envsubst.Bytes([]byte(GetBackofficeResourceEmbed()))
+	copybackoffice := GetBackofficeResourceEmbed()
+	backoffice, err = envsubst.Bytes([]byte(copybackoffice))
 	if err != nil {
 		PrintError("Updating env variables of " + string(backoffice) + " cause: " + err.Error())
 
@@ -155,7 +160,8 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 		return err
 	}
 
-	externalAccess, err = envsubst.Bytes([]byte(GetExternalAccessResourceEmbed()))
+	copyexternalAccess := GetExternalAccessResourceEmbed()
+	externalAccess, err = envsubst.Bytes([]byte(copyexternalAccess))
 	if err != nil {
 		PrintError("Updating env variables of " + string(externalAccess) + " cause: " + err.Error())
 
@@ -165,7 +171,8 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 		return err
 	}
 
-	ingestor, err = envsubst.Bytes([]byte(GetIngestorResourceEmbed()))
+	copyingestor := GetIngestorResourceEmbed()
+	ingestor, err = envsubst.Bytes([]byte(copyingestor))
 	if err != nil {
 		PrintError("Updating env variables of " + string(ingestor) + " cause: " + err.Error())
 
@@ -175,18 +182,19 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 		return err
 	}
 
-	metadataDatabase, err = envsubst.Bytes([]byte(GetMetadataDatabaseResourceEmbed()))
+	copymetadataDatabase := GetMetadataDatabaseResourceEmbed()
+	metadataDatabase, err = envsubst.Bytes([]byte(copymetadataDatabase))
 	if err != nil {
 		PrintError("Updating env variables of " + string(metadataDatabase) + " cause: " + err.Error())
 
 	}
-
 	metadatadatabasefile, err := GenerateTempFile(dname, "metadataDatabase", metadataDatabase)
 	if err != nil {
 		return err
 	}
 
-	resources, err = envsubst.Bytes([]byte(GetResourcesResourceEmbed()))
+	copyresources := GetResourcesResourceEmbed()
+	resources, err = envsubst.Bytes([]byte(copyresources))
 	if err != nil {
 		PrintError("Updating env variables of " + string(resources) + " cause: " + err.Error())
 
@@ -196,7 +204,8 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 		return err
 	}
 
-	gateway, err = envsubst.Bytes([]byte(GetGatewayResourceEmbed()))
+	copygateway := GetGatewayResourceEmbed()
+	gateway, err = envsubst.Bytes([]byte(copygateway))
 	if err != nil {
 		PrintError("Updating env variables of " + string(gateway) + " cause: " + err.Error())
 
@@ -206,7 +215,8 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 		return err
 	}
 
-	dataPortal, err = envsubst.Bytes([]byte(GetDataPortalResourceEmbed()))
+	copydataPortal := GetDataPortalResourceEmbed()
+	dataPortal, err = envsubst.Bytes([]byte(copydataPortal))
 	if err != nil {
 		PrintError("Updating env variables of " + string(dataPortal) + " cause: " + err.Error())
 
@@ -216,7 +226,8 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 		return err
 	}
 
-	converter, err = envsubst.Bytes([]byte(GetConverterResourceEmbed()))
+	copyconverter := GetConverterResourceEmbed()
+	converter, err = envsubst.Bytes([]byte(copyconverter))
 	if err != nil {
 		PrintError("Updating env variables of " + string(converter) + " cause: " + err.Error())
 
@@ -229,7 +240,7 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 	list_of_services := [14]string{rabbitmqoperatorfile, rabbitmqfile, loggingfile, secretsfile, metadatadatabasefile,
 		backofficefile, externalaccessfile, ingestorfile, resourcesfile, gatewayfile, dataportalfile, converterfile}
 
-	if err := godotenv.Load(env); err != nil {
+	if err := godotenv.Overload(env); err != nil {
 		PrintError("Error loading env variables from " + env + " cause: " + err.Error())
 
 	}
