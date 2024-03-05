@@ -22,7 +22,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -131,6 +130,9 @@ func SetupIPs() error {
 
 func PrintUrls() {
 
+	os.Setenv("API_URL_READY", os.Getenv("PROTOCOL")+"://"+os.Getenv("LOCAL_IP")+os.Getenv("BASE_CONTEXT")+os.Getenv("API_PATH")+"/ui/")
+	os.Setenv("PORTAL_URL_READY", os.Getenv("PROTOCOL")+"://"+os.Getenv("LOCAL_IP")+os.Getenv("BASE_CONTEXT")+"/dataportal/")
+
 	fmt.Println(string(colorCyan), `Open Source Kubernetes deploy
 
      &&&&&&&&&&&&&&&&&& *&&&&&&&%&&&%               *****************               &&&&&&/         
@@ -148,8 +150,8 @@ func PrintUrls() {
     Copyright (C) 2023  EPOS ERIC`, string(colorReset))
 	t := table.NewWriter()
 	t.SetTitle("EPOS ACCESS POINTS")
-	t.AppendRow(table.Row{"EPOS Data Portal", "http://" + os.Getenv("LOCAL_IP") + os.Getenv("BASE_CONTEXT")})
-	t.AppendRow(table.Row{"EPOS API Gateway", "http://" + os.Getenv("LOCAL_IP") + os.Getenv("BASE_CONTEXT") + os.Getenv("API_PATH") + "/ui/"})
+	t.AppendRow(table.Row{"EPOS API Gateway", os.Getenv("API_URL_READY")})
+	t.AppendRow(table.Row{"EPOS Data Portal", os.Getenv("PORTAL_URL_READY")})
 	t.SetStyle(table.StyleColoredBlackOnGreenWhite)
 	fmt.Println(t.Render())
 }
@@ -168,37 +170,6 @@ func PrintNotification(message string) {
 }
 func PrintNewVersionAvailable(message string) {
 	fmt.Println(string(colorYellow), "[NEW VERSION AVAILABLE] "+message, string(colorReset))
-}
-
-func GenerateTempFile(dname string, filetype string, text []byte) (string, error) {
-
-	tmpFile, err := ioutil.TempFile(dname, filetype)
-	if err != nil {
-		PrintError("Could not create temporary file, cause " + err.Error() + " error: " + err.Error())
-		return "", err
-	}
-	defer tmpFile.Close()
-	name := tmpFile.Name()
-	if _, err = tmpFile.Write(text); err != nil {
-		PrintError("Unable to write to temporary file, cause " + err.Error() + " error: " + err.Error())
-		return "", err
-	}
-	PrintNotification("File " + name + " created successfully")
-
-	return name, nil
-}
-
-func CreateDirectory(dir string) error {
-	if _, err := os.Stat(os.TempDir() + os.Getenv("PREFIX")); os.IsNotExist(err) {
-		err := os.Mkdir(os.TempDir()+os.Getenv("PREFIX"), 0755)
-		if err != nil {
-			PrintError("Could not create temporary folder, cause " + err.Error() + " error: " + err.Error())
-		}
-		PrintTask("Directory" + dir + " created successfully")
-	} else {
-		PrintNotification("Directory " + dir + " already exists, using it")
-	}
-	return nil
 }
 
 func RemoveContents(dir string) error {
@@ -220,15 +191,6 @@ func RemoveContents(dir string) error {
 		}
 	} else {
 		PrintNotification("Directory " + dir + " already exists, using it")
-	}
-	return nil
-}
-
-func GenerateFile(text []byte, filePath string) error {
-	err := ioutil.WriteFile(filePath, text, 0777)
-	if err != nil {
-		PrintError("Could not create file, cause " + err.Error())
-		return err
 	}
 	return nil
 }
@@ -355,8 +317,4 @@ func GetAvailablePort() (string, error) {
 		return port, nil
 	}
 	return "", fmt.Errorf("could not find an available port")
-}
-
-func GetVersion() string {
-	return "1.0.0"
 }

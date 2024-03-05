@@ -53,7 +53,7 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 
 	envtagname = regexp.MustCompile(`[^a-zA-Z0-9 ]+`).ReplaceAllString(envtagname, "-")
 	os.Setenv("PREFIX", envtagname)
-	dname := os.TempDir() + os.Getenv("PREFIX")
+	dname := GenerateDirectoryName()
 
 	if !strings.HasPrefix(tag, "\"") {
 		tag = "\"" + tag + "\""
@@ -295,7 +295,7 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 		}
 	}
 	PrintWait("Waiting for conditions met")
-	time.Sleep(10 * time.Second)
+	time.Sleep(20 * time.Second)
 	if err := ExecuteCommand(exec.Command("kubectl",
 		"wait",
 		"--for=condition=Ready",
@@ -308,7 +308,7 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 	}
 	PrintWait("Waiting for all services up and running")
 
-	time.Sleep(20 * time.Second)
+	time.Sleep(40 * time.Second)
 	PrintTask("Restarting gateway")
 
 	if err := ExecuteCommand(exec.Command("kubectl",

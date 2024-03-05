@@ -48,7 +48,7 @@ func PopulateEnvironment(context string, env string, path string, namespace stri
 
 	envtagname = regexp.MustCompile(`[^a-zA-Z0-9 ]+`).ReplaceAllString(envtagname, "-")
 	os.Setenv("PREFIX", envtagname)
-	dname := os.TempDir() + os.Getenv("PREFIX")
+	dname := GenerateDirectoryName()
 
 	if err := RemoveContents(dname); err != nil {
 		PrintError("Error on removing the content from directory " + err.Error())
