@@ -30,6 +30,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/a8m/envsubst"
 	"github.com/google/go-github/v52/github"
 	"github.com/hashicorp/go-version"
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -193,6 +194,54 @@ func RemoveContents(dir string) error {
 		PrintNotification("Directory " + dir + " already exists, using it")
 	}
 	return nil
+}
+
+func CopyFromEmbedAndSubstitute(dname string, filetype string, file []byte) (string, error) {
+
+	/*copy := file
+	temp, err := envsubst.Bytes([]byte(copy))
+	if err != nil {
+		PrintError("Updating env variables of " + string(temp) + " cause: " + err.Error())
+		return "", err
+	}
+	result, err := GenerateTempFile(dname, filetype, temp)
+	if err != nil {
+		PrintError("Generating file of " + string(result) + " cause: " + err.Error())
+		return "", err
+	}
+	return result, nil*/
+
+	filelocation, err := GenerateTempFile(dname, filetype, file)
+	if err != nil {
+		PrintError("Generating file of " + string(filelocation) + " cause: " + err.Error())
+		return "", err
+	}
+	content, err := os.ReadFile(filelocation)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	contentUpdated, err := envsubst.String(string(content))
+	if err != nil {
+		PrintError("Generating file of " + string(filelocation) + " cause: " + err.Error())
+		return "", err
+	}
+
+	readfile, err := os.OpenFile(filelocation, os.O_RDWR, 0644)
+	if err != nil {
+		PrintError("Generating file of " + string(filelocation) + " cause: " + err.Error())
+		return "", err
+	}
+	defer readfile.Close()
+
+	if err := os.Truncate(filelocation, 0); err != nil {
+		return "", err
+	}
+
+	if _, err = readfile.Write([]byte(contentUpdated)); err != nil {
+		return "", err
+	}
+	return filelocation, nil
 }
 
 func GetLastTag() error {

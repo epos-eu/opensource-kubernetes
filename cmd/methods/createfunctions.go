@@ -25,7 +25,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/a8m/envsubst"
 	"github.com/joho/godotenv"
 )
 
@@ -104,135 +103,62 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 	}
 	SetupIPs()
 
-	copyoperator := GetOperatorResourceEmbed()
-	operator, err = envsubst.Bytes([]byte(copyoperator))
-	if err != nil {
-		PrintError("Updating env variables of " + string(operator) + " cause: " + err.Error())
-
-	}
-	rabbitmqoperatorfile, err := GenerateTempFile(dname, "operator", operator)
+	rabbitmqoperatorfile, err := CopyFromEmbedAndSubstitute(dname, "operator", GetOperatorResourceEmbed())
 	if err != nil {
 		return err
 	}
 
-	copyrabbitmq := GetRabbitMQResourceEmbed()
-	rabbitmq, err = envsubst.Bytes([]byte(copyrabbitmq))
-	if err != nil {
-		PrintError("Updating env variables of " + string(rabbitmq) + " cause: " + err.Error())
-		return err
-	}
-
-	rabbitmqfile, err := GenerateTempFile(dname, "rabbitmq", rabbitmq)
+	rabbitmqfile, err := CopyFromEmbedAndSubstitute(dname, "rabbitmq", GetRabbitMQResourceEmbed())
 	if err != nil {
 		return err
 	}
 
-	copylogging := GetLoggingResourceEmbed()
-	logging, err = envsubst.Bytes([]byte(copylogging))
-	if err != nil {
-		PrintError("Updating env variables of " + string(logging) + " cause: " + err.Error())
-		return err
-	}
-	loggingfile, err := GenerateTempFile(dname, "logging", logging)
+	loggingfile, err := CopyFromEmbedAndSubstitute(dname, "logging", GetLoggingResourceEmbed())
 	if err != nil {
 		return err
 	}
 
-	copysecrets := GetSecretsResourceEmbed()
-	secrets, err = envsubst.Bytes([]byte(copysecrets))
-	if err != nil {
-		PrintError("Updating env variables of " + string(secrets) + " cause: " + err.Error())
-
-	}
-	secretsfile, err := GenerateTempFile(dname, "secrets", secrets)
+	secretsfile, err := CopyFromEmbedAndSubstitute(dname, "secrets", GetSecretsResourceEmbed())
 	if err != nil {
 		return err
 	}
 
-	copybackoffice := GetBackofficeResourceEmbed()
-	backoffice, err = envsubst.Bytes([]byte(copybackoffice))
-	if err != nil {
-		PrintError("Updating env variables of " + string(backoffice) + " cause: " + err.Error())
-
-	}
-	backofficefile, err := GenerateTempFile(dname, "backoffice", backoffice)
+	backofficefile, err := CopyFromEmbedAndSubstitute(dname, "backoffice", GetBackofficeResourceEmbed())
 	if err != nil {
 		return err
 	}
 
-	copyexternalAccess := GetExternalAccessResourceEmbed()
-	externalAccess, err = envsubst.Bytes([]byte(copyexternalAccess))
-	if err != nil {
-		PrintError("Updating env variables of " + string(externalAccess) + " cause: " + err.Error())
-
-	}
-	externalaccessfile, err := GenerateTempFile(dname, "externalAccess", externalAccess)
+	externalaccessfile, err := CopyFromEmbedAndSubstitute(dname, "externalAccess", GetExternalAccessResourceEmbed())
 	if err != nil {
 		return err
 	}
 
-	copyingestor := GetIngestorResourceEmbed()
-	ingestor, err = envsubst.Bytes([]byte(copyingestor))
-	if err != nil {
-		PrintError("Updating env variables of " + string(ingestor) + " cause: " + err.Error())
-
-	}
-	ingestorfile, err := GenerateTempFile(dname, "ingestor", ingestor)
+	ingestorfile, err := CopyFromEmbedAndSubstitute(dname, "ingestor", GetIngestorResourceEmbed())
 	if err != nil {
 		return err
 	}
 
-	copymetadataDatabase := GetMetadataDatabaseResourceEmbed()
-	metadataDatabase, err = envsubst.Bytes([]byte(copymetadataDatabase))
-	if err != nil {
-		PrintError("Updating env variables of " + string(metadataDatabase) + " cause: " + err.Error())
-
-	}
-	metadatadatabasefile, err := GenerateTempFile(dname, "metadataDatabase", metadataDatabase)
+	metadatadatabasefile, err := CopyFromEmbedAndSubstitute(dname, "metadataDatabase", GetMetadataDatabaseResourceEmbed())
 	if err != nil {
 		return err
 	}
 
-	copyresources := GetResourcesResourceEmbed()
-	resources, err = envsubst.Bytes([]byte(copyresources))
-	if err != nil {
-		PrintError("Updating env variables of " + string(resources) + " cause: " + err.Error())
-
-	}
-	resourcesfile, err := GenerateTempFile(dname, "resources", resources)
+	resourcesfile, err := CopyFromEmbedAndSubstitute(dname, "resources", GetResourcesResourceEmbed())
 	if err != nil {
 		return err
 	}
 
-	copygateway := GetGatewayResourceEmbed()
-	gateway, err = envsubst.Bytes([]byte(copygateway))
-	if err != nil {
-		PrintError("Updating env variables of " + string(gateway) + " cause: " + err.Error())
-
-	}
-	gatewayfile, err := GenerateTempFile(dname, "gateway", gateway)
+	gatewayfile, err := CopyFromEmbedAndSubstitute(dname, "gateway", GetGatewayResourceEmbed())
 	if err != nil {
 		return err
 	}
 
-	copydataPortal := GetDataPortalResourceEmbed()
-	dataPortal, err = envsubst.Bytes([]byte(copydataPortal))
-	if err != nil {
-		PrintError("Updating env variables of " + string(dataPortal) + " cause: " + err.Error())
-
-	}
-	dataportalfile, err := GenerateTempFile(dname, "dataPortal", dataPortal)
+	dataportalfile, err := CopyFromEmbedAndSubstitute(dname, "dataPortal", GetDataPortalResourceEmbed())
 	if err != nil {
 		return err
 	}
 
-	copyconverter := GetConverterResourceEmbed()
-	converter, err = envsubst.Bytes([]byte(copyconverter))
-	if err != nil {
-		PrintError("Updating env variables of " + string(converter) + " cause: " + err.Error())
-
-	}
-	converterfile, err := GenerateTempFile(dname, "converter", converter)
+	converterfile, err := CopyFromEmbedAndSubstitute(dname, "converter", GetConverterResourceEmbed())
 	if err != nil {
 		return err
 	}
