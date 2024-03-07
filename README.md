@@ -40,7 +40,7 @@ Usage:
 
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
-  delete      Delete an environment on kubernetes
+  delete      Delete an environment on Kubernetes
   deploy      Deploy an environment on Kubernetes
   export      Export configuration files in output folder, options: [env]
   help        Help about any command
@@ -62,10 +62,12 @@ Usage:
   opensource-kubernetes deploy [flags]
 
 Flags:
-      --context string     Kubernetes context
-  -h, --help               help for deploy
-      --namespace string   Kubernetes namespace
-      --tag string         Version Tag
+      --autoupdate string   Auto update the images versions (true|false)
+      --context string      Kubernetes context
+  -h, --help                help for deploy
+      --namespace string    Kubernetes namespace
+      --tag string          Version Tag
+      --update string       Update of an existing deployment (true|false), default false
 ```
 
 ## Delete the existing environment
@@ -95,10 +97,12 @@ Usage:
   opensource-kubernetes populate [flags]
 
 Flags:
+      --context string     Kubernetes context
       --env string         Environment variable file
       --folder string      Folder where ttl files are located
   -h, --help               help for populate
       --namespace string   Kubernetes namespace
+      --tag string         Version Tag
 ```
 
 ### Manual option
@@ -142,33 +146,28 @@ http://<your-ip>/<DEPLOY_PATH>/<API_PATH>
 
 | Name | Standard Value | Description |
 |--|--|--|
-| API_HOST | ${API_HOST} | API Host IP, if not set is generated automatically using machine IP |
-| EXECUTE_HOST | ${API_HOST} | Internal variable to setup redirections for the external access service, if not set is generated automatically using machine IP |
-| DEPLOY_PATH | / | Context path of the environment|
-| BASE_CONTEXT | empty value | Context path name of the environment (similar to DEPLOY_PATH but without the initial /) |
-| API_PATH | /api/v1 | API GATEWAY access path|
-| GUI_PORT | 8000 | Port used by EPOS Data Portal or other GUIs |
-| BACKOFFICE_GUI_PORT | 9000 | Port used by EPOS Backoffice UI or other Backoffice GUIs |
-| API_PORT | 8080 | Port used by EPOS API Gateway |
-| IS_MONITORING_AUTH | false | Variable used to protect monitoring endpoint via JWT |
-| IS_AAI_ENABLED | false | Variable used to protect backoffice endpoints via AAI service |
+| PROTOCOL | http | |
+| API_PATH | /api/v1 | API GATEWAY access path |
+| INGRESS_CLASS | nginx | Ingress class used in the Kubernetes cluster |
+
 
 ### RabbitMQ configuration
 
 | Name | Standard Value | Description |
 |--|--|--|
+| BROKER_HOST | rabbitmq | RabbitMQ host |
 | BROKER_USERNAME | changeme | RabbitMQ username |
 | BROKER_PASSWORD | changeme | RabbitMQ password |
 | BROKER_VHOST | changeme | RabbitMQ vhost |
 
-### RabbitMQ configuration
+### PostgreSQL configuration
 
 | Name | Standard Value | Description |
 |--|--|--|
+| POSTGRESQL_HOST | metadatacatalogue:5432 | Database service |
 | POSTGRES_USER | postgres | Database user |
 | POSTGRESQL_PASSWORD | changeme | Database password |
 | POSTGRES_DB | cerif | Database name |
-| POSTGRESQL_CONNECTION_STRING | jdbc:postgresql://postgrescerif:5432/${POSTGRES_DB}?user=${POSTGRES_USER}&password=${POSTGRESQL_PASSWORD} | Database connection string based on previous configurations |
 | PERSISTENCE_NAME | EPOSDataModel | Persistence Name of scientific metadata |
 | PERSISTENCE_NAME_PROCESSING | EPOSProcessing | Persistence Name of processing metadata |
 
@@ -187,17 +186,17 @@ http://<your-ip>/<DEPLOY_PATH>/<API_PATH>
 | Name | Standard Value | Description |
 |--|--|--|
 | MONITORING | false | True if activate interaction between system and monitoring service |
-| MONITORING_URL | changeme | Monitoring service url |
-| MONITORING_USER | changeme | Monitoring service username |
-| MONITORING_PWD | changeme | Monitoring service password |
+| MONITORING_URL | empty | Monitoring service url |
+| MONITORING_USER | empty | Monitoring service username |
+| MONITORING_PWD | empty | Monitoring service password |
 
 ### Monitoring Service configuration
 
 | Name | Standard Value | Description |
 |--|--|--|
-| Kubernetes_REGISTRY | epos | Kubernetes registry url |
-| REGISTRY_USERNAME | changeme | Kubernetes registry username |
-| REGISTRY_PASSWORD | changeme | Kubernetes registry password |
+| DOCKER_REGISTRY | epos | Docker registry url |
+| REGISTRY_USERNAME | changeme | Docker registry username |
+| REGISTRY_PASSWORD | changeme | Docker registry password |
 
 ### Other Environment variables
 
@@ -212,27 +211,24 @@ http://<your-ip>/<DEPLOY_PATH>/<API_PATH>
 | IS_AAI_ENABLED | false | |
 | SECURITY_KEY | empty | |
 | AAI_SERVICE_ENDPOINT | empty | |
-| FACETS_DEFAULT | false | |
+| FACETS_DEFAULT | true | |
 | FACETS_TYPE_DEFAULT | categories | |
-| REDIS_SERVER | redis-server | |
-| INGESTOR_HASH | 3F58A1895982CC81A2E5CEDA7DD9AC7009DF9998 | |
+| INGESTOR_HASH | FA9BEB99E4029AD5A6615399E7BBAE21356086B3 | "changeme" Security key|
 
 
-### Kubernetes Images for Open Source 
+### Docker Images for Open Source 
 
 | Variable name | Image name | Default Tag |
 |--|--|--|
-|--|--|--|
 | MESSAGE_BUS_IMAGE | rabbitmq | 3.11.7-management |
-| REDIS_IMAGE | redis | 7.0.11 |
-| GATEWAY_IMAGE | epos-api-gateway | 1.1.0 |
-| RESOURCES_SERVICE_IMAGE | resources-service | 1.3.2 |
-| INGESTOR_IMAGE | ingestor-service | 1.3.1 |
-| EXTERNAL_ACCESS_IMAGE | external-access-service | 1.3.2 |
-| BACKOFFICE_SERVICE_IMAGE | backoffice-service | 2.1.0 |
-| CONVERTER_IMAGE | converter-service | 1.1.5 |
-| DATA_METADATA_SERVICE_IMAGE | data-metadata-service | 2.3.17 |
-| METADATA_DB_IMAGE | metadata-database-deploy | 2.2.0 |
+| DATAPORTAL_IMAGE | data-portal | 1.0.1 |
+| GATEWAY_IMAGE | epos-api-gateway | 2.0.2 |
+| RESOURCES_SERVICE_IMAGE | resources-service | 2.0.6 |
+| INGESTOR_IMAGE | ingestor-service | 2.0.1 |
+| EXTERNAL_ACCESS_IMAGE | external-access-service | 2.0.1 |
+| BACKOFFICE_SERVICE_IMAGE | backoffice-service | 2.3.9 |
+| CONVERTER_IMAGE | converter-service | 2.0.0 |
+| METADATA_DB_IMAGE | metadata-database-deploy | 2.4.20 |
 
 ## Maintenance
 
