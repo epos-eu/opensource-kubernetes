@@ -95,7 +95,7 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 	os.Setenv("DEPLOY_PATH", "/"+namespace+"/")
 	os.Setenv("BASE_CONTEXT", "/"+namespace)
 	os.Setenv("POSTGRESQL_CONNECTION_STRING", "jdbc:postgresql://"+os.Getenv("POSTGRESQL_HOST")+"/"+os.Getenv("POSTGRES_DB")+"?user="+os.Getenv("POSTGRES_USER")+"&password="+os.Getenv("POSTGRESQL_PASSWORD")+"")
-	if autoupdate == "true" || isDefaultEnv {
+	if autoupdate == "true" || !isDefaultEnv {
 		if err := CheckImagesUpdate(); err != nil {
 			PrintError("Error on updating the docker container images " + err.Error())
 			return err

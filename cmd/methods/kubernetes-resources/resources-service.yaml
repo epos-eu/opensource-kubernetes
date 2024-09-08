@@ -161,7 +161,7 @@ metadata:
     app: epos-resources
     version: ${DEPLOY_TAG}
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: ${DEPLOY_PATH}api/resources-service/v1/
+    nginx.ingress.kubernetes.io/rewrite-target: /api/resources-service/v1/
 spec:
   ingressClassName: ${INGRESS_CLASS}
   rules:

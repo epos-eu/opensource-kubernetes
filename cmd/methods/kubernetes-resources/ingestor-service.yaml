@@ -103,7 +103,7 @@ metadata:
     app: epos-ingestor
     version: ${DEPLOY_TAG}
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: ${DEPLOY_PATH}api/ingestor-service/v1/
+    nginx.ingress.kubernetes.io/rewrite-target: /api/ingestor-service/v1/
 spec:
   ingressClassName: ${INGRESS_CLASS}
   rules:

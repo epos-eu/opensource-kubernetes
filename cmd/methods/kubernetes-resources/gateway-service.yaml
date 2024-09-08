@@ -71,6 +71,16 @@ spec:
             secretKeyRef:
               name: systemsecrets
               key: gateway_load_processing_api
+        - name: LOAD_EMAIL_SENDER_API
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: gateway_load_email_sender_api
+        - name: LOAD_SHARING_API
+          valueFrom:
+            secretKeyRef:
+              name: systemsecrets
+              key: gateway_load_sharing_api
         - name: IS_MONITORING_AUTH
           valueFrom:
             secretKeyRef:

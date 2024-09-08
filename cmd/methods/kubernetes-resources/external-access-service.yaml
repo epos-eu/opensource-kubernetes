@@ -154,7 +154,7 @@ metadata:
     app: epos-external-access
     version: ${DEPLOY_TAG}
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: ${DEPLOY_PATH}api/external-access-service/v1/
+    nginx.ingress.kubernetes.io/rewrite-target: /api/external-access-service/v1/
 spec:
   ingressClassName: ${INGRESS_CLASS}
   rules:
