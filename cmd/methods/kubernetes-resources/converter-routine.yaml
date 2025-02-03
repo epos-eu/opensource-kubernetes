@@ -16,25 +16,25 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: converter-deployment 
+  name: converter-routine-deployment
 spec:
   replicas: 1 # maybe more, no problem should happen with software heart 
   revisionHistoryLimit: 0
   selector:
     matchLabels:
-      app: epos-converter
+      app: epos-converter-routine
       version: ${DEPLOY_TAG}
   template:
     metadata:
       labels:
-        app: epos-converter
+        app: epos-converter-routine
         version: ${DEPLOY_TAG}
       annotations:
         docker-metadata: DOCKER-METADATA
     spec:
       containers:
-      - name: converter-service
-        image: ${DOCKER_REGISTRY}/${CONVERTER_SERVICE_IMAGE}
+      - name: converter-routine
+        image: ${DOCKER_REGISTRY}/${CONVERTER_ROUTINE_IMAGE}
         env:
         - name: PERSISTENCE_NAME
           valueFrom:
@@ -93,21 +93,6 @@ spec:
         - name: converter-pvc
           persistentVolumeClaim:
             claimName: converter-pvc
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: converter-service
-  labels:
-    app: epos-converter
-    version: DEPLOY-TAG
-spec:
-  selector:
-    app: epos-converter
-    version: DEPLOY-TAG
-  ports:
-  - protocol: TCP
-    port: 8080
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

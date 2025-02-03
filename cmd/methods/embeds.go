@@ -14,7 +14,10 @@ var (
 	backoffice []byte
 
 	//go:embed "kubernetes-resources/converter-service.yaml"
-	converter []byte
+	converterservice []byte
+
+	//go:embed "kubernetes-resources/converter-routine.yaml"
+	converterroutine []byte
 
 	//go:embed "kubernetes-resources/external-access-service.yaml"
 	externalAccess []byte
@@ -58,8 +61,11 @@ func GetDataPortalResourceEmbed() []byte {
 func GetBackofficeResourceEmbed() []byte {
 	return backoffice
 }
-func GetConverterResourceEmbed() []byte {
-	return converter
+func GetConverterServiceResourceEmbed() []byte {
+	return converterservice
+}
+func GetConverterRoutineResourceEmbed() []byte {
+	return converterroutine
 }
 func GetExternalAccessResourceEmbed() []byte {
 	return externalAccess
