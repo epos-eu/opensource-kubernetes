@@ -158,13 +158,18 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 		return err
 	}
 
-	converterfile, err := CopyFromEmbedAndSubstitute(dname, "converter", GetConverterResourceEmbed())
+	converterservicefile, err := CopyFromEmbedAndSubstitute(dname, "converterservice", GetConverterServiceResourceEmbed())
 	if err != nil {
 		return err
 	}
 
-	list_of_services := [14]string{rabbitmqoperatorfile, rabbitmqfile, loggingfile, secretsfile, metadatadatabasefile,
-		backofficefile, externalaccessfile, ingestorfile, resourcesfile, gatewayfile, dataportalfile, converterfile}
+	converterroutinefile, err := CopyFromEmbedAndSubstitute(dname, "converterroutine", GetConverterRoutineResourceEmbed())
+	if err != nil {
+		return err
+	}
+
+	list_of_services := [13]string{rabbitmqoperatorfile, rabbitmqfile, loggingfile, secretsfile, metadatadatabasefile,
+		backofficefile, externalaccessfile, ingestorfile, resourcesfile, gatewayfile, dataportalfile, converterservicefile, converterroutinefile}
 
 	if err := godotenv.Overload(env); err != nil {
 		PrintError("Error loading env variables from " + env + " cause: " + err.Error())
@@ -218,7 +223,7 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 
 	time.Sleep(10 * time.Second)
 
-	for i := 1; i < 12; i++ {
+	for i := 1; i < 13; i++ {
 		PrintTask("Deploy of " + list_of_services[i])
 		if err := ExecuteCommand(exec.Command(
 			"kubectl",
@@ -230,9 +235,10 @@ func CreateEnvironment(env string, context string, namespace string, tag string,
 			PrintError("Error deploying the service " + list_of_services[i])
 			return err
 		}
+		time.Sleep(5 * time.Second)
 	}
 	PrintWait("Waiting for conditions met")
-	time.Sleep(20 * time.Second)
+	time.Sleep(30 * time.Second)
 	if err := ExecuteCommand(exec.Command("kubectl",
 		"wait",
 		"--for=condition=Ready",
